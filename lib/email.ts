@@ -67,9 +67,7 @@ export async function sendMagicLink(
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #000; text-align: center;">Organizer Access</h2>
           <p>Click the link below to access the organizer dashboard:</p>
-          <a href="${magicLinkUrl}">
-            <button onclick="window.location.href='${magicLinkUrl}'">Go to Access</button>
-          </a>
+          <a href="${magicLinkUrl}" style="display: inline-block; padding: 10px 20px; font-size: 16px; color: #fff; background-color: #D4AF37; border-radius: 5px; text-align: center; text-decoration: none; margin: 15px 0;">Go to Access</a>
           <p>This link will expire after use.</p>
         </div>
         </body>
@@ -95,9 +93,7 @@ export async function sendMagicLink(
           </div>
           
           <div style="text-align: center; margin: 40px 0 20px;">
-            <a href="${magicLinkUrl}">
-              <button onclick="window.location.href='${magicLinkUrl}'" style="display: inline-block; padding: 12px 25px; background-color: #D4AF37; color: #fff; text-decoration: none; border-radius: 4px; font-weight: bold;">View Details & RSVP</button>
-            </a>
+            <a href="${magicLinkUrl}" style="display: inline-block; padding: 12px 25px; background-color: #D4AF37; color: #fff; text-decoration: none; border-radius: 4px; font-weight: bold; margin: 15px 0;">View Details & RSVP</a>
             <p style="margin-top: 10px; font-size: 0.8em; color: #666;">This link will expire after use.</p>
           </div>
         </div>
