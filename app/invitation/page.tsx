@@ -15,7 +15,17 @@ export default async function InvitationPage() {
     redirect("/organizer");
   }
 
-  const rsvp = await getRsvpByUserId(session.id);
+  const rsvpData = await getRsvpByUserId(session.id);
+
+  // Transform the data to match expected type
+  const rsvp = rsvpData
+    ? {
+        status: rsvpData.status || "pending",
+        plus_one: rsvpData.plus_one || false,
+        plus_one_name: rsvpData.plus_one_name || null,
+        joined_wechat: rsvpData.joined_wechat || false,
+      }
+    : null;
 
   return (
     <div className="min-h-screen">

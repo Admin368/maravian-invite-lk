@@ -47,9 +47,14 @@ type RsvpFormProps = {
     plus_one: boolean;
     plus_one_name: string | null;
   } | null;
+  redirectOnSuccess?: boolean;
 };
 
-export function RsvpForm({ user, existingRsvp }: RsvpFormProps) {
+export function RsvpForm({
+  user,
+  existingRsvp,
+  redirectOnSuccess = false,
+}: RsvpFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
@@ -88,7 +93,11 @@ export function RsvpForm({ user, existingRsvp }: RsvpFormProps) {
 
       toast.success("Thank you for your response!");
 
-      router.refresh();
+      if (redirectOnSuccess) {
+        router.push("/invitation");
+      } else {
+        router.refresh();
+      }
     } catch (error) {
       console.error("RSVP error:", error);
       toast.error(

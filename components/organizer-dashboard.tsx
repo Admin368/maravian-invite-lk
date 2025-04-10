@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,8 @@ import {
 } from "lucide-react";
 import { AddGuestForm } from "@/components/add-guest-form";
 import { GenerateInviteLink } from "@/components/generate-invite-link";
+import { ManageOrganizers } from "@/components/manage-organizers";
+import { useRouter, useSearchParams } from "next/navigation";
 
 // Update the Guest type to include joined_wechat
 type Guest = {
@@ -55,7 +57,16 @@ export function OrganizerDashboard({ guests, stats }: OrganizerDashboardProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState<Record<string, boolean>>({});
   const [guestList, setGuestList] = useState<Guest[]>(guests);
+  const [tab1, setTab1] = useState("guests");
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab) {
+      setTab1(tab);
+    }
+  }, [searchParams]);
   const filteredGuests = guestList.filter(
     (guest) =>
       guest.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -68,8 +79,14 @@ export function OrganizerDashboard({ guests, stats }: OrganizerDashboardProps) {
   const guestsAlone = filteredGuests.filter(
     (guest) => guest.status === "attending"
   );
-  const plusOnes = filteredGuests.filter((guest) => guest.plus_one === true);
-  const attendingGuests = [...guestsAlone, ...plusOnes];
+  const plusOnes = filteredGuests.filter(
+    (guest) => guest.status === "attending" && guest.plus_one === true
+  );
+  const attendingGuestsAndPlusOnes = [...guestsAlone, ...plusOnes];
+
+  const attendingGuests = filteredGuests.filter(
+    (guest) => guest.status === "attending"
+  );
   // const attendingGuests = filteredGuests.filter(
   //   (guest) => guest.status === "attending"
   // );
@@ -304,7 +321,9 @@ export function OrganizerDashboard({ guests, stats }: OrganizerDashboardProps) {
             <CheckCircle className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{attendingGuests.length}</div>
+            <div className="text-2xl font-bold">
+              {attendingGuestsAndPlusOnes.length}
+            </div>
             <p className="text-sm text-gray-500">
               ({guestsAlone.length} guests, {plusOnes.length} plus ones)
             </p>
@@ -373,32 +392,52 @@ export function OrganizerDashboard({ guests, stats }: OrganizerDashboardProps) {
           </div>
         </div>
 
-        <Tabs defaultValue="all">
+        <Tabs
+          value={tab1}
+          className="space-y-4"
+          onValueChange={(value) => {
+            router.push(`/organizer?tab=${value}`);
+          }}
+        >
           <TabsList>
-            <TabsTrigger value="all">
-              All Guests ({filteredGuests.length})
-            </TabsTrigger>
-            <TabsTrigger value="attending">
-              Attending ({attendingGuests.length})
-            </TabsTrigger>
-            <TabsTrigger value="not-attending">
-              Not Attending ({notAttendingGuests.length})
-            </TabsTrigger>
-            <TabsTrigger value="pending">
-              Pending ({pendingGuests.length})
-            </TabsTrigger>
+            <TabsTrigger value="guests">Guests</TabsTrigger>
+            <TabsTrigger value="organizers">Organizers</TabsTrigger>
           </TabsList>
-          <TabsContent value="all" className="border rounded-md mt-4">
-            {renderGuestTable(filteredGuests)}
+          <TabsContent value="guests" className="space-y-4">
+            <Tabs defaultValue="all">
+              <TabsList>
+                <TabsTrigger value="all">
+                  All Guests ({filteredGuests.length})
+                </TabsTrigger>
+                <TabsTrigger value="attending">
+                  Attending ({attendingGuests.length})
+                </TabsTrigger>
+                <TabsTrigger value="not-attending">
+                  Not Attending ({notAttendingGuests.length})
+                </TabsTrigger>
+                <TabsTrigger value="pending">
+                  Pending ({pendingGuests.length})
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="all" className="border rounded-md mt-4">
+                {renderGuestTable(filteredGuests)}
+              </TabsContent>
+              <TabsContent value="attending" className="border rounded-md mt-4">
+                {renderGuestTable(attendingGuests)}
+              </TabsContent>
+              <TabsContent
+                value="not-attending"
+                className="border rounded-md mt-4"
+              >
+                {renderGuestTable(notAttendingGuests)}
+              </TabsContent>
+              <TabsContent value="pending" className="border rounded-md mt-4">
+                {renderGuestTable(pendingGuests)}
+              </TabsContent>
+            </Tabs>
           </TabsContent>
-          <TabsContent value="attending" className="border rounded-md mt-4">
-            {renderGuestTable(attendingGuests)}
-          </TabsContent>
-          <TabsContent value="not-attending" className="border rounded-md mt-4">
-            {renderGuestTable(notAttendingGuests)}
-          </TabsContent>
-          <TabsContent value="pending" className="border rounded-md mt-4">
-            {renderGuestTable(pendingGuests)}
+          <TabsContent value="organizers">
+            <ManageOrganizers />
           </TabsContent>
         </Tabs>
       </div>

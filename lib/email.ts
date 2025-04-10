@@ -145,3 +145,54 @@ export async function notifyOrganizers(message: string, subject: string) {
 
   return transporter.sendMail(mailOptions);
 }
+
+export async function sendOrganizerStatusEmail(
+  email: string,
+  name: string,
+  isAdded: boolean
+) {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const dashboardUrl = `${baseUrl}/organizer`;
+
+  const mailOptions = {
+    from: `"Layla & Kondwani Celebration" <${
+      process.env.SMTP_FROM || process.env.SMTP_USER
+    }>`,
+    to: email,
+    subject: isAdded
+      ? "You've Been Added as an Organizer"
+      : "Organizer Access Removed",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #D4AF37; text-align: center;">${
+          isAdded ? "Welcome to the Team!" : "Organizer Access Update"
+        }</h2>
+        <p>Dear ${name},</p>
+        <p>${
+          isAdded
+            ? "You have been added as an organizer for Layla and Kondwani's engagement celebration. You now have access to the organizer dashboard where you can manage guests and view RSVPs."
+            : "Your access to the organizer dashboard for Layla and Kondwani's engagement celebration has been removed."
+        }</p>
+        ${
+          isAdded
+            ? `<p style="text-align: center; margin-top: 30px;">
+                <a href="${dashboardUrl}" style="display: inline-block; padding: 10px 20px; background-color: #D4AF37; color: #fff; text-decoration: none; border-radius: 4px;">Access Dashboard</a>
+              </p>`
+            : ""
+        }
+      </div>
+    `,
+  };
+
+  // Return the URL in preview mode
+  if (isPreviewEnvironment) {
+    console.log(
+      "PREVIEW MODE - Organizer status email would be sent:",
+      mailOptions
+    );
+    return { dashboardUrl };
+  }
+
+  // Actually send the email in production
+  return transporter.sendMail(mailOptions);
+}
