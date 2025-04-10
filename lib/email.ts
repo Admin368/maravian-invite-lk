@@ -67,9 +67,9 @@ export async function sendMagicLink(
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #000; text-align: center;">Organizer Access</h2>
           <p>Click the link below to access the organizer dashboard:</p>
-          <p style="text-align: center;">
+          <a href="${magicLinkUrl}">
             <button onclick="window.location.href='${magicLinkUrl}'">Go to Access</button>
-          </p>
+          </a>
           <p>This link will expire after use.</p>
         </div>
         </body>
@@ -93,7 +93,9 @@ export async function sendMagicLink(
           </div>
           
           <div style="text-align: center; margin: 40px 0 20px;">
-            <button onclick="window.location.href='${magicLinkUrl}'" style="display: inline-block; padding: 12px 25px; background-color: #D4AF37; color: #fff; text-decoration: none; border-radius: 4px; font-weight: bold;">View Details & RSVP</button>
+            <a href="${magicLinkUrl}">
+              <button onclick="window.location.href='${magicLinkUrl}'" style="display: inline-block; padding: 12px 25px; background-color: #D4AF37; color: #fff; text-decoration: none; border-radius: 4px; font-weight: bold;">View Details & RSVP</button>
+            </a>
             <p style="margin-top: 10px; font-size: 0.8em; color: #666;">This link will expire after use.</p>
           </div>
         </div>

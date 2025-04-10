@@ -15,7 +15,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { toast } from "react-toastify";
-import { Loader2 } from "lucide-react";
+import { Loader2, CheckCircle2, Mail } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -34,6 +34,7 @@ const formSchema = z.object({
 export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [magicLink, setMagicLink] = useState<string | null>(null);
+  const [sentEmail, setSentEmail] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -45,6 +46,7 @@ export function LoginForm() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     setMagicLink(null);
+    setSentEmail(null);
 
     try {
       const response = await fetch("/api/auth/login", {
@@ -61,21 +63,23 @@ export function LoginForm() {
         return;
       }
 
+      setSentEmail(values.email);
+
       // If we're in preview mode and have a direct link
       if (data.magicLinkUrl) {
         setMagicLink(data.magicLinkUrl);
         toast.info(
-          "Magic link generated for preview. Click the link below to continue."
+          "Preview access link generated. Click the link below to continue."
         );
       } else {
-        toast.success("We sent you a magic link to sign in.");
+        toast.success("Access link sent to your email!");
       }
 
       form.reset();
     } catch (error) {
       console.error("Login error:", error);
       toast.error(
-        error instanceof Error ? error.message : "Failed to send login link"
+        error instanceof Error ? error.message : "Failed to send access link"
       );
     } finally {
       setIsLoading(false);
@@ -84,42 +88,79 @@ export function LoginForm() {
 
   return (
     <div>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Enter your Email</FormLabel>
-                <FormControl>
-                  <Input placeholder="your.email@example.com" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <Button
-            type="submit"
-            className="w-full bg-black hover:bg-black/90 text-white"
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Sending link...
-              </>
-            ) : (
-              "Send Access Link"
-            )}
-          </Button>
-        </form>
-      </Form>
+      {!sentEmail ? (
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Enter your Email</FormLabel>
+                  <FormControl>
+                    <Input placeholder="your.email@example.com" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button
+              type="submit"
+              className="w-full bg-black hover:bg-black/90 text-white"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Sending access link...
+                </>
+              ) : (
+                "Send Access Link"
+              )}
+            </Button>
+          </form>
+        </Form>
+      ) : (
+        <Card className="border-green-200 bg-green-50/50">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="h-6 w-6 text-green-600" />
+              <CardTitle className="text-lg text-green-800">
+                Access Link Sent!
+              </CardTitle>
+            </div>
+            <CardDescription className="text-green-700">
+              We've sent an access link to {sentEmail}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-start gap-3 rounded-lg bg-white p-4 shadow-sm">
+              <Mail className="mt-1 h-5 w-5 text-gray-400" />
+              <div className="space-y-1">
+                <p className="text-sm font-medium">Check your email</p>
+                <p className="text-sm text-gray-500">
+                  Click the link in your email to access your account. The link
+                  will expire after use.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => setSentEmail(null)}
+            >
+              Send another link
+            </Button>
+          </CardFooter>
+        </Card>
+      )}
 
       {magicLink && (
         <Card className="mt-6 border-gold/20">
           <CardHeader>
-            <CardTitle className="text-lg">Preview Mode Magic Link</CardTitle>
+            <CardTitle className="text-lg">Preview Mode Access Link</CardTitle>
             <CardDescription>
               Since you're in preview mode, you can use this direct link instead
               of receiving an email:
@@ -138,7 +179,7 @@ export function LoginForm() {
             </Alert>
           </CardContent>
           <CardFooter className="text-sm text-muted-foreground">
-            This link will expire after use, just like a real magic link.
+            This link will expire after use, just like a real access link.
           </CardFooter>
         </Card>
       )}
