@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 
-export default function OrganizerVerifyPage() {
+function VerifyContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
@@ -56,5 +56,22 @@ export default function OrganizerVerifyPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function OrganizerVerifyPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4 text-gold">
+            <Loader2 className="h-8 w-8 animate-spin text-gold" />
+            <h2 className="text-2xl font-bold">Loading...</h2>
+          </div>
+        </div>
+      }
+    >
+      <VerifyContent />
+    </Suspense>
   );
 }
