@@ -28,7 +28,7 @@ import { GenerateInviteLink } from "@/components/generate-invite-link";
 import { ManageOrganizers } from "@/components/manage-organizers";
 import { useRouter, useSearchParams } from "next/navigation";
 
-// Update the Guest type to include joined_wechat
+// Update the Guest type to include joined_wechat and email_sent
 type Guest = {
   id: number;
   email: string;
@@ -38,6 +38,7 @@ type Guest = {
   plus_one_name: string | null;
   updated_at: string;
   joined_wechat?: boolean;
+  email_sent: boolean;
 };
 
 type Stats = {
@@ -226,6 +227,7 @@ export function OrganizerDashboard({ guests, stats }: OrganizerDashboardProps) {
             <TableHead>Status</TableHead>
             <TableHead>Plus One</TableHead>
             <TableHead>WeChat</TableHead>
+            <TableHead>Email Sent</TableHead>
             <TableHead>Last Updated</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
@@ -233,7 +235,7 @@ export function OrganizerDashboard({ guests, stats }: OrganizerDashboardProps) {
         <TableBody>
           {guestList.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={7} className="text-center">
+              <TableCell colSpan={8} className="text-center">
                 No guests found
               </TableCell>
             </TableRow>
@@ -267,6 +269,13 @@ export function OrganizerDashboard({ guests, stats }: OrganizerDashboardProps) {
                     <Badge className="bg-green-500">Joined</Badge>
                   ) : (
                     <Badge variant="outline">Not Joined</Badge>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {guest.email_sent ? (
+                    <Badge className="bg-green-500">Sent</Badge>
+                  ) : (
+                    <Badge variant="outline">Not Sent</Badge>
                   )}
                 </TableCell>
                 <TableCell>

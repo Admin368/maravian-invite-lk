@@ -1,34 +1,51 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { getSession } from "@/lib/auth"
-import { createUser, getUserByEmail } from "@/lib/db"
+import { type NextRequest, NextResponse } from "next/server";
+import { getSession } from "@/lib/auth";
+import {
+  createUser,
+  getUserByEmail,
+  createInvitation,
+  sendMagicLink,
+  updateEmailSentStatus,
+} from "@/lib/db";
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getSession()
+    const session = await getSession();
 
     if (!session || !session.isOrganizer) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { name, email } = await request.json()
+    const { name, email } = await request.json();
 
     if (!name || !email) {
-      return NextResponse.json({ error: "Name and email are required" }, { status: 400 })
+      return NextResponse.json(
+        { error: "Name and email are required" },
+        { status: 400 }
+      );
     }
 
     // Check if user already exists
-    const existingUser = await getUserByEmail(email)
+    const existingUser = await getUserByEmail(email);
 
     if (existingUser) {
-      return NextResponse.json({ error: "A guest with this email already exists" }, { status: 400 })
+      return NextResponse.json(
+        { error: "A guest with this email already exists" },
+        { status: 400 }
+      );
     }
 
     // Create new user
-    const user = await createUser(email, name, false)
+    const user = await createUser(email, name, false);
 
-    return NextResponse.json({ success: true, user }, { status: 200 })
+    // Create invitation and send email
+    const invitation = await createInvitation(user.id);
+    await sendMagicLink(email, invitation.token, false, name);
+    await updateEmailSentStatus(user.id, true);
+
+    return NextResponse.json({ success: true, user }, { status: 200 });
   } catch (error) {
-    console.error("Add guest error:", error)
-    return NextResponse.json({ error: "Failed to add guest" }, { status: 500 })
+    console.error("Add guest error:", error);
+    return NextResponse.json({ error: "Failed to add guest" }, { status: 500 });
   }
 }

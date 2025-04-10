@@ -1,6 +1,11 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
-import { getAllGuests, createInvitation, sendMagicLink } from "@/lib/db";
+import {
+  getAllGuests,
+  createInvitation,
+  sendMagicLink,
+  updateEmailSentStatus,
+} from "@/lib/db";
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,6 +23,9 @@ export async function POST(request: NextRequest) {
 
       // Send magic link email
       await sendMagicLink(guest.email, invitation.token, false, guest.name);
+
+      // Update email sent status
+      await updateEmailSentStatus(guest.id, true);
     }
 
     return NextResponse.json({ success: true }, { status: 200 });

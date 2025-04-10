@@ -25,8 +25,8 @@ export async function createUser(
 ) {
   try {
     const result = await sql`
-      INSERT INTO users (email, name, is_organizer)
-      VALUES (${email}, ${name}, ${isOrganizer})
+      INSERT INTO users (email, name, is_organizer, email_sent)
+      VALUES (${email}, ${name}, ${isOrganizer}, false)
       RETURNING *
     `;
     return result[0];
@@ -156,7 +156,7 @@ export async function getOrganizers() {
 export async function getAllGuests() {
   try {
     return await sql`
-      SELECT u.id, u.email, u.name, r.status, r.plus_one, r.plus_one_name, r.updated_at, r.joined_wechat
+      SELECT u.id, u.email, u.name, r.status, r.plus_one, r.plus_one_name, r.updated_at, r.joined_wechat, u.email_sent
       FROM users u
       LEFT JOIN rsvps r ON u.id = r.user_id
       WHERE u.is_organizer = false
@@ -252,6 +252,19 @@ export async function updateOrganizer(userId: number, name: string) {
     `;
   } catch (error) {
     console.error("Error in updateOrganizer:", error);
+    throw error;
+  }
+}
+
+export async function updateEmailSentStatus(userId: number, sent: boolean) {
+  try {
+    await sql`
+      UPDATE users
+      SET email_sent = ${sent}
+      WHERE id = ${userId}
+    `;
+  } catch (error) {
+    console.error("Error in updateEmailSentStatus:", error);
     throw error;
   }
 }

@@ -76,6 +76,8 @@ export async function sendMagicLink(
         </html>
       `
       : `
+      <!DOCTYPE html>
+      <body>
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #fff; padding: 20px; border: 1px solid #e0e0e0;">
           <div style="text-align: center; margin-bottom: 20px;">
             <h1 style="color: #D4AF37; margin-bottom: 5px;">You're Cordially Invited</h1>
@@ -99,6 +101,8 @@ export async function sendMagicLink(
             <p style="margin-top: 10px; font-size: 0.8em; color: #666;">This link will expire after use.</p>
           </div>
         </div>
+      </body>
+      </html>
       `,
   };
 
