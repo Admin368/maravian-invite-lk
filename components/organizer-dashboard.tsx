@@ -1,193 +1,202 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { useToast } from "@/components/ui/use-toast"
-import { Loader2, Mail, Users, CheckCircle, XCircle, Clock } from "lucide-react"
-import { AddGuestForm } from "@/components/add-guest-form"
-import { GenerateInviteLink } from "@/components/generate-invite-link"
+import { useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "react-toastify";
+import {
+  Loader2,
+  Mail,
+  Users,
+  CheckCircle,
+  XCircle,
+  Clock,
+} from "lucide-react";
+import { AddGuestForm } from "@/components/add-guest-form";
+import { GenerateInviteLink } from "@/components/generate-invite-link";
 
 // Update the Guest type to include joined_wechat
 type Guest = {
-  id: number
-  email: string
-  name: string
-  status: string | null
-  plus_one: boolean
-  plus_one_name: string | null
-  updated_at: string
-  joined_wechat?: boolean
-}
+  id: number;
+  email: string;
+  name: string;
+  status: string | null;
+  plus_one: boolean;
+  plus_one_name: string | null;
+  updated_at: string;
+  joined_wechat?: boolean;
+};
 
 type Stats = {
-  total_guests: number
-  attending: number
-  not_attending: number
-  pending: number
-  plus_ones: number
-}
+  total_guests: number;
+  attending: number;
+  not_attending: number;
+  pending: number;
+  plus_ones: number;
+};
 
 type OrganizerDashboardProps = {
-  guests: Guest[]
-  stats: Stats
-}
+  guests: Guest[];
+  stats: Stats;
+};
 
 export function OrganizerDashboard({ guests, stats }: OrganizerDashboardProps) {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [isLoading, setIsLoading] = useState<Record<string, boolean>>({})
-  const [guestList, setGuestList] = useState<Guest[]>(guests)
-  const { toast } = useToast()
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isLoading, setIsLoading] = useState<Record<string, boolean>>({});
+  const [guestList, setGuestList] = useState<Guest[]>(guests);
 
   const filteredGuests = guestList.filter(
     (guest) =>
       guest.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      guest.email.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
+      guest.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-  const pendingGuests = filteredGuests.filter((guest) => !guest.status || guest.status === "pending")
-  const attendingGuests = filteredGuests.filter((guest) => guest.status === "attending")
-  const notAttendingGuests = filteredGuests.filter((guest) => guest.status === "not_attending")
+  const pendingGuests = filteredGuests.filter(
+    (guest) => !guest.status || guest.status === "pending"
+  );
+  const guestsAlone = filteredGuests.filter(
+    (guest) => guest.status === "attending"
+  );
+  const plusOnes = filteredGuests.filter((guest) => guest.plus_one === true);
+  const attendingGuests = [...guestsAlone, ...plusOnes];
+  // const attendingGuests = filteredGuests.filter(
+  //   (guest) => guest.status === "attending"
+  // );
+  const notAttendingGuests = filteredGuests.filter(
+    (guest) => guest.status === "not_attending"
+  );
 
   async function sendInvite(guestId: number, email: string) {
-    setIsLoading((prev) => ({ ...prev, [guestId]: true }))
+    setIsLoading((prev) => ({ ...prev, [guestId]: true }));
 
     try {
       const response = await fetch("/api/organizer/send-invite", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ guestId, email }),
-      })
+      });
 
       if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error || "Failed to send invite")
+        const data = await response.json();
+        throw new Error(data.error || "Failed to send invite");
       }
 
-      toast({
-        title: "Invite Sent",
-        description: `Invitation sent to ${email}`,
-      })
+      toast.success(`Invitation sent to ${email}`);
     } catch (error) {
-      console.error("Send invite error:", error)
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to send invite",
-        variant: "destructive",
-      })
+      console.error("Send invite error:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to send invite"
+      );
     } finally {
-      setIsLoading((prev) => ({ ...prev, [guestId]: false }))
+      setIsLoading((prev) => ({ ...prev, [guestId]: false }));
     }
   }
 
   async function sendAllInvites() {
-    setIsLoading((prev) => ({ ...prev, all: true }))
+    setIsLoading((prev) => ({ ...prev, all: true }));
 
     try {
       const response = await fetch("/api/organizer/send-all-invites", {
         method: "POST",
-      })
+      });
 
       if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error || "Failed to send invites")
+        const data = await response.json();
+        throw new Error(data.error || "Failed to send invites");
       }
 
-      toast({
-        title: "Invites Sent",
-        description: "All invitations have been sent",
-      })
+      toast.success("All invitations have been sent");
     } catch (error) {
-      console.error("Send all invites error:", error)
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to send invites",
-        variant: "destructive",
-      })
+      console.error("Send all invites error:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to send invites"
+      );
     } finally {
-      setIsLoading((prev) => ({ ...prev, all: false }))
+      setIsLoading((prev) => ({ ...prev, all: false }));
     }
   }
 
   async function sendPendingInvites() {
-    setIsLoading((prev) => ({ ...prev, pending: true }))
+    setIsLoading((prev) => ({ ...prev, pending: true }));
 
     try {
       const response = await fetch("/api/organizer/send-pending-invites", {
         method: "POST",
-      })
+      });
 
       if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error || "Failed to send invites")
+        const data = await response.json();
+        throw new Error(data.error || "Failed to send invites");
       }
 
-      toast({
-        title: "Invites Sent",
-        description: "Invitations sent to all pending guests",
-      })
+      toast.success("Invitations sent to all pending guests");
     } catch (error) {
-      console.error("Send pending invites error:", error)
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to send invites",
-        variant: "destructive",
-      })
+      console.error("Send pending invites error:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to send invites"
+      );
     } finally {
-      setIsLoading((prev) => ({ ...prev, pending: false }))
+      setIsLoading((prev) => ({ ...prev, pending: false }));
     }
   }
 
   function getStatusIcon(status: string | null) {
     if (status === "attending") {
-      return <CheckCircle className="h-5 w-5 text-green-500" />
+      return <CheckCircle className="h-5 w-5 text-green-500" />;
     } else if (status === "not_attending") {
-      return <XCircle className="h-5 w-5 text-red-500" />
+      return <XCircle className="h-5 w-5 text-red-500" />;
     } else {
-      return <Clock className="h-5 w-5 text-amber-500" />
+      return <Clock className="h-5 w-5 text-amber-500" />;
     }
   }
 
   function getStatusBadge(status: string | null) {
     if (status === "attending") {
-      return <Badge className="bg-green-500">Attending</Badge>
+      return <Badge className="bg-green-500">Attending</Badge>;
     } else if (status === "not_attending") {
-      return <Badge variant="destructive">Not Attending</Badge>
+      return <Badge variant="destructive">Not Attending</Badge>;
     } else {
       return (
         <Badge variant="outline" className="text-amber-500 border-amber-500">
           Pending
         </Badge>
-      )
+      );
     }
   }
 
   function formatDate(dateString: string) {
-    if (!dateString) return "N/A"
-    const date = new Date(dateString)
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
-    })
+    });
   }
 
   // Handle guest added event
   const handleGuestAdded = async () => {
     try {
-      const response = await fetch("/api/organizer/guests")
+      const response = await fetch("/api/organizer/guests");
       if (response.ok) {
-        const data = await response.json()
-        setGuestList(data.guests)
+        const data = await response.json();
+        setGuestList(data.guests);
       }
     } catch (error) {
-      console.error("Failed to refresh guest list:", error)
+      console.error("Failed to refresh guest list:", error);
     }
-  }
+  };
 
   // Update the renderGuestTable function to include WeChat status and generate link button
   function renderGuestTable(guestList: Guest[]) {
@@ -226,7 +235,11 @@ export function OrganizerDashboard({ guests, stats }: OrganizerDashboardProps) {
                   {guest.plus_one ? (
                     <div>
                       <Badge className="bg-gold">Yes</Badge>
-                      {guest.plus_one_name && <div className="text-sm text-gray-500 mt-1">{guest.plus_one_name}</div>}
+                      {guest.plus_one_name && (
+                        <div className="text-sm text-gray-500 mt-1">
+                          {guest.plus_one_name}
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <Badge variant="outline">No</Badge>
@@ -239,7 +252,9 @@ export function OrganizerDashboard({ guests, stats }: OrganizerDashboardProps) {
                     <Badge variant="outline">Not Joined</Badge>
                   )}
                 </TableCell>
-                <TableCell>{guest.updated_at ? formatDate(guest.updated_at) : "N/A"}</TableCell>
+                <TableCell>
+                  {guest.updated_at ? formatDate(guest.updated_at) : "N/A"}
+                </TableCell>
                 <TableCell>
                   <div className="flex items-center">
                     <Button
@@ -255,7 +270,11 @@ export function OrganizerDashboard({ guests, stats }: OrganizerDashboardProps) {
                       )}
                       Email
                     </Button>
-                    <GenerateInviteLink guestId={guest.id} guestName={guest.name} guestEmail={guest.email} />
+                    <GenerateInviteLink
+                      guestId={guest.id}
+                      guestName={guest.name}
+                      guestEmail={guest.email}
+                    />
                   </div>
                 </TableCell>
               </TableRow>
@@ -263,7 +282,7 @@ export function OrganizerDashboard({ guests, stats }: OrganizerDashboardProps) {
           )}
         </TableBody>
       </Table>
-    )
+    );
   }
 
   return (
@@ -286,6 +305,9 @@ export function OrganizerDashboard({ guests, stats }: OrganizerDashboardProps) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{attendingGuests.length}</div>
+            <p className="text-sm text-gray-500">
+              ({guestsAlone.length} guests, {plusOnes.length} plus ones)
+            </p>
           </CardContent>
         </Card>
 
@@ -295,7 +317,9 @@ export function OrganizerDashboard({ guests, stats }: OrganizerDashboardProps) {
             <XCircle className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{notAttendingGuests.length}</div>
+            <div className="text-2xl font-bold">
+              {notAttendingGuests.length}
+            </div>
           </CardContent>
         </Card>
 
@@ -322,11 +346,23 @@ export function OrganizerDashboard({ guests, stats }: OrganizerDashboardProps) {
           </div>
           <div className="flex gap-2 flex-wrap">
             <AddGuestForm onGuestAdded={handleGuestAdded} />
-            <Button onClick={sendAllInvites} disabled={isLoading.all} className="bg-black hover:bg-black/90">
-              {isLoading.all ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Mail className="h-4 w-4 mr-2" />}
+            <Button
+              onClick={sendAllInvites}
+              disabled={isLoading.all}
+              className="bg-black hover:bg-black/90"
+            >
+              {isLoading.all ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <Mail className="h-4 w-4 mr-2" />
+              )}
               Send All Invites
             </Button>
-            <Button onClick={sendPendingInvites} disabled={isLoading.pending} variant="outline">
+            <Button
+              onClick={sendPendingInvites}
+              disabled={isLoading.pending}
+              variant="outline"
+            >
               {isLoading.pending ? (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
               ) : (
@@ -339,10 +375,18 @@ export function OrganizerDashboard({ guests, stats }: OrganizerDashboardProps) {
 
         <Tabs defaultValue="all">
           <TabsList>
-            <TabsTrigger value="all">All Guests ({filteredGuests.length})</TabsTrigger>
-            <TabsTrigger value="attending">Attending ({attendingGuests.length})</TabsTrigger>
-            <TabsTrigger value="not-attending">Not Attending ({notAttendingGuests.length})</TabsTrigger>
-            <TabsTrigger value="pending">Pending ({pendingGuests.length})</TabsTrigger>
+            <TabsTrigger value="all">
+              All Guests ({filteredGuests.length})
+            </TabsTrigger>
+            <TabsTrigger value="attending">
+              Attending ({attendingGuests.length})
+            </TabsTrigger>
+            <TabsTrigger value="not-attending">
+              Not Attending ({notAttendingGuests.length})
+            </TabsTrigger>
+            <TabsTrigger value="pending">
+              Pending ({pendingGuests.length})
+            </TabsTrigger>
           </TabsList>
           <TabsContent value="all" className="border rounded-md mt-4">
             {renderGuestTable(filteredGuests)}
@@ -359,5 +403,5 @@ export function OrganizerDashboard({ guests, stats }: OrganizerDashboardProps) {
         </Tabs>
       </div>
     </div>
-  )
+  );
 }

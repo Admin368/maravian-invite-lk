@@ -1,57 +1,73 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import * as z from "zod"
-import { Button } from "@/components/ui/button"
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Switch } from "@/components/ui/switch"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Loader2 } from "lucide-react"
-import { useToast } from "@/components/ui/use-toast"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
+import { toast } from "react-toastify";
 
 const formSchema = z.object({
   status: z.enum(["attending", "not_attending"]),
-  plusOne: z.boolean().default(false),
+  plusOne: z.boolean(),
   plusOneName: z.string().optional(),
-})
+});
+
+type FormValues = z.infer<typeof formSchema>;
 
 type RsvpFormProps = {
   user: {
-    id: number
-    name: string
-    email: string
-  }
+    id: number;
+    name: string;
+    email: string;
+  };
   existingRsvp?: {
-    status: string
-    plus_one: boolean
-    plus_one_name: string | null
-  } | null
-}
+    status: string;
+    plus_one: boolean;
+    plus_one_name: string | null;
+  } | null;
+};
 
 export function RsvpForm({ user, existingRsvp }: RsvpFormProps) {
-  const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
-  const { toast } = useToast()
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      status: (existingRsvp?.status as "attending" | "not_attending") || "attending",
+      status:
+        (existingRsvp?.status as "attending" | "not_attending") || "attending",
       plusOne: existingRsvp?.plus_one || false,
       plusOneName: existingRsvp?.plus_one_name || "",
     },
-  })
+  });
 
-  const watchStatus = form.watch("status")
-  const watchPlusOne = form.watch("plusOne")
+  const watchStatus = form.watch("status");
+  const watchPlusOne = form.watch("plusOne");
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsLoading(true)
+  async function onSubmit(values: FormValues) {
+    setIsLoading(true);
 
     try {
       const response = await fetch("/api/rsvp", {
@@ -63,28 +79,23 @@ export function RsvpForm({ user, existingRsvp }: RsvpFormProps) {
           plusOne: values.plusOne,
           plusOneName: values.plusOne ? values.plusOneName : null,
         }),
-      })
+      });
 
       if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error || "Failed to submit RSVP")
+        const data = await response.json();
+        throw new Error(data.error || "Failed to submit RSVP");
       }
 
-      toast({
-        title: "RSVP Submitted",
-        description: "Thank you for your response!",
-      })
+      toast.success("Thank you for your response!");
 
-      router.refresh()
+      router.refresh();
     } catch (error) {
-      console.error("RSVP error:", error)
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to submit RSVP",
-        variant: "destructive",
-      })
+      console.error("RSVP error:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to submit RSVP"
+      );
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 
@@ -92,7 +103,19 @@ export function RsvpForm({ user, existingRsvp }: RsvpFormProps) {
     <Card className="border-gold/20">
       <CardHeader className="text-center">
         <CardTitle className="text-2xl">RSVP</CardTitle>
-        <CardDescription>Please let us know if you can attend the celebration for Layla & Kondwani</CardDescription>
+        <CardDescription>
+          Please let us know if you can attend the celebration for Layla &
+          Kondwani
+        </CardDescription>
+        <CardDescription>
+          Date: Wednesday 16th April 2025, Time: 5pm, more details on the next
+          page
+        </CardDescription>
+        <CardDescription className="text-red-500">
+          This is a surprise proposal! Please DO NOT share or discuss any
+          details about the date and time with the bride - she is expecting this
+          event to happen on a different date.
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -113,13 +136,17 @@ export function RsvpForm({ user, existingRsvp }: RsvpFormProps) {
                         <FormControl>
                           <RadioGroupItem value="attending" />
                         </FormControl>
-                        <FormLabel className="font-normal">Yes, I will attend</FormLabel>
+                        <FormLabel className="font-normal">
+                          Yes, I will attend
+                        </FormLabel>
                       </FormItem>
                       <FormItem className="flex items-center space-x-3 space-y-0">
                         <FormControl>
                           <RadioGroupItem value="not_attending" />
                         </FormControl>
-                        <FormLabel className="font-normal">No, I cannot attend</FormLabel>
+                        <FormLabel className="font-normal">
+                          No, I cannot attend
+                        </FormLabel>
                       </FormItem>
                     </RadioGroup>
                   </FormControl>
@@ -136,11 +163,18 @@ export function RsvpForm({ user, existingRsvp }: RsvpFormProps) {
                   render={({ field }) => (
                     <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                       <div className="space-y-0.5">
-                        <FormLabel className="text-base">Bringing a Plus One?</FormLabel>
-                        <FormDescription>Let us know if you'll be bringing a guest</FormDescription>
+                        <FormLabel className="text-base">
+                          Bringing a Plus One?
+                        </FormLabel>
+                        <FormDescription>
+                          Let us know if you'll be bringing a guest
+                        </FormDescription>
                       </div>
                       <FormControl>
-                        <Switch checked={field.value} onCheckedChange={field.onChange} />
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
                       </FormControl>
                     </FormItem>
                   )}
@@ -154,7 +188,11 @@ export function RsvpForm({ user, existingRsvp }: RsvpFormProps) {
                       <FormItem>
                         <FormLabel>Guest's Name</FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter your guest's name" {...field} />
+                          <Input
+                            placeholder="Enter your guest's name"
+                            required
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -164,7 +202,11 @@ export function RsvpForm({ user, existingRsvp }: RsvpFormProps) {
               </>
             )}
 
-            <Button type="submit" className="w-full bg-gold hover:bg-gold/90 text-white" disabled={isLoading}>
+            <Button
+              type="submit"
+              className="w-full bg-gold hover:bg-gold/90 text-white"
+              disabled={isLoading}
+            >
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -178,5 +220,5 @@ export function RsvpForm({ user, existingRsvp }: RsvpFormProps) {
         </Form>
       </CardContent>
     </Card>
-  )
+  );
 }

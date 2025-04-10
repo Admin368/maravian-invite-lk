@@ -1,51 +1,62 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Loader2 } from "lucide-react"
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
 
 export default function VerifyPage() {
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const token = searchParams.get("token")
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token");
 
   useEffect(() => {
     async function verifyToken() {
       if (!token) {
-        setError("Invalid token")
-        setIsLoading(false)
-        return
+        setError("Invalid token");
+        setIsLoading(false);
+        return;
       }
 
       try {
-        const response = await fetch(`/api/auth/verify?token=${token}`)
-        const data = await response.json()
+        const response = await fetch(`/api/auth/verify?token=${token}`);
+        const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(data.error || "Failed to verify token")
+          throw new Error(data.error || "Failed to verify token");
         }
 
-        router.push(data.redirectUrl)
+        router.push(data.redirectUrl);
       } catch (error) {
-        console.error("Verification error:", error)
-        setError(error instanceof Error ? error.message : "Failed to verify token")
-        setIsLoading(false)
+        console.error("Verification error:", error);
+        setError(
+          error instanceof Error ? error.message : "Failed to verify token"
+        );
+        setIsLoading(false);
       }
     }
 
-    verifyToken()
-  }, [token, router])
+    verifyToken();
+  }, [token, router]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50  bg-opacity-70">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-center">Verifying your access</CardTitle>
-          <CardDescription className="text-center">Please wait while we verify your magic link</CardDescription>
+          <CardDescription className="text-center">
+            Please wait while we verify your magic link
+          </CardDescription>
         </CardHeader>
         <CardContent className="flex justify-center">
           {isLoading ? (
@@ -61,5 +72,5 @@ export default function VerifyPage() {
         )}
       </Card>
     </div>
-  )
+  );
 }
