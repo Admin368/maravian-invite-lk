@@ -41,13 +41,18 @@ export async function sendMagicLink(
   }/verify?token=${token}`;
 
   const mailOptions = {
-    from: `"Layla & Kondwani" <${
-      process.env.SMTP_FROM || process.env.SMTP_USER
-    }>`,
+    // from: `"Layla & Kondwani" <${
+    //   process.env.SMTP_FROM || process.env.SMTP_USER
+    // }>`,
+    from: {
+      name: "Layla & Kondwani",
+      address: process.env.SMTP_FROM || process.env.SMTP_USER,
+    },
     to: email,
     subject: isOrganizer
       ? "Organizer Access Link"
       : `${name} You are cordially invited to Layla & Kondwani's Engagement Celebration`,
+    text: `Sign in to Layla & Kondwani\n${magicLinkUrl}\n\n`,
     html: isOrganizer
       ? `
       <!DOCTYPE html>
@@ -134,12 +139,12 @@ export async function sendMagicLink(
 
   // Return the magic link URL in preview mode
   if (isPreviewEnvironment) {
-    await transporter.sendMail(mailOptions);
+    await transporter.sendMail(mailOptions as any);
     return { magicLinkUrl };
   }
 
   // Actually send the email in production
-  return transporter.sendMail(mailOptions);
+  return transporter.sendMail(mailOptions as any);
 }
 
 export async function notifyOrganizers(message: string, subject: string) {
