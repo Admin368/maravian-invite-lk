@@ -156,7 +156,7 @@ export async function getOrganizers() {
 export async function getAllGuests() {
   try {
     return await sql`
-      SELECT u.id, u.email, u.name, r.status, r.plus_one, r.plus_one_name, r.updated_at, r.joined_wechat, r.wechat_id, u.email_sent
+      SELECT u.id, u.email, u.name, r.status, r.plus_one, r.plus_one_name, r.updated_at, r.joined_wechat, u.wechat_id, u.email_sent
       FROM users u
       LEFT JOIN rsvps r ON u.id = r.user_id
       WHERE u.is_organizer = false

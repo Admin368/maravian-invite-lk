@@ -21,23 +21,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Update user information
+    // Update user information including WeChat ID
     await sql`
       UPDATE users
       SET 
         name = COALESCE(${name}, name),
-        email = COALESCE(${email}, email)
+        email = COALESCE(${email}, email),
+        wechat_id = COALESCE(${wechatId}, wechat_id)
       WHERE id = ${guestId}
     `;
-
-    // Update WeChat ID in rsvps table
-    if (wechatId !== undefined) {
-      await sql`
-        UPDATE rsvps
-        SET wechat_id = ${wechatId}
-        WHERE user_id = ${guestId}
-      `;
-    }
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
