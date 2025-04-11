@@ -250,7 +250,7 @@ export function OrganizerDashboard({ guests, stats }: OrganizerDashboardProps) {
               <TableRow key={guest.id}>
                 <TableCell className="font-medium">{guest.name}</TableCell>
                 <TableCell>
-                  {guest.email.endsWith("@no_email.com") ? (
+                  {guest.email.endsWith("@noemail.com") ? (
                     <Badge
                       variant="outline"
                       className="text-amber-500 border-amber-500"
@@ -319,7 +319,7 @@ export function OrganizerDashboard({ guests, stats }: OrganizerDashboardProps) {
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center">
-                    {!guest.email.endsWith("@no_email.com") && (
+                    {!guest.email.endsWith("@noemail.com") && (
                       <Button
                         size="sm"
                         variant="outline"

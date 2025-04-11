@@ -32,7 +32,7 @@ export function GenerateInviteLink({
   const [inviteLink, setInviteLink] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const isNoEmail = guestEmail.endsWith("@no_email.com");
+  const isNoEmail = guestEmail.endsWith("@noemail.com");
 
   async function generateLink() {
     setIsLoading(true);

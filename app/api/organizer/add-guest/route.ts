@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     if (noEmail) {
       // Generate a temporary email with timestamp
       const timestamp = Date.now();
-      userEmail = `${timestamp}@no_email.com`;
+      userEmail = `${timestamp}@noemail.com`;
       shouldSendEmail = false;
     } else if (!email) {
       return NextResponse.json(
