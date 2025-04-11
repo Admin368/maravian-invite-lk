@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "react-toastify";
 import { Loader2, Copy, LinkIcon, Check } from "lucide-react";
 import copy from "copy-to-clipboard";
+import { Loading } from "./ui/loading";
 
 type GenerateInviteLinkProps = {
   guestId: number;
@@ -96,7 +97,7 @@ export function GenerateInviteLink({
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loading size="lg" />
                   Generating...
                 </>
               ) : (

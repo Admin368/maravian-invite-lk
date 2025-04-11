@@ -11,7 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { Loading } from "@/components/ui/loading";
 
 export default function VerifyPage() {
   const [isLoading, setIsLoading] = useState(true);
@@ -60,7 +60,7 @@ export default function VerifyPage() {
         </CardHeader>
         <CardContent className="flex justify-center">
           {isLoading ? (
-            <Loader2 className="h-8 w-8 animate-spin text-gold" />
+            <Loading size="lg" />
           ) : error ? (
             <div className="text-center text-red-500">{error}</div>
           ) : null}

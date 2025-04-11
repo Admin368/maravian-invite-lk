@@ -26,6 +26,7 @@ import {
 import { toast } from "react-toastify";
 import { Loader2, Pencil, Copy, Check } from "lucide-react";
 import copy from "copy-to-clipboard";
+import { Loading } from "./ui/loading";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters" }),
@@ -179,7 +180,7 @@ export function EditGuestForm({ guest, onGuestUpdated }: EditGuestFormProps) {
               <Button type="submit" disabled={isLoading}>
                 {isLoading ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loading size="lg" />
                     Updating...
                   </>
                 ) : (

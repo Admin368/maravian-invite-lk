@@ -13,7 +13,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "react-toastify";
-import { Loader2, Trash2, Edit2, Check, X, Mail } from "lucide-react";
+import { Trash2, Edit2, Check, X, Mail } from "lucide-react";
+import { Loading } from "./ui/loading";
 
 type Organizer = {
   id: number;
@@ -199,7 +200,7 @@ export function ManageOrganizers() {
           <Button type="submit" disabled={isLoading}>
             {isLoading ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loading size="lg" />
                 Adding...
               </>
             ) : (

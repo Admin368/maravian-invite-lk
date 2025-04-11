@@ -2,8 +2,7 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Loader2 } from "lucide-react";
-
+import { Loading } from "@/components/ui/loading";
 function VerifyContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -47,7 +46,7 @@ function VerifyContent() {
           </div>
         ) : (
           <div className="flex flex-col items-center gap-4 text-gold">
-            <Loader2 className="h-8 w-8 animate-spin text-gold" />
+            <Loading size="lg" />
             <h2 className="text-2xl font-bold">Verifying Organizer Access</h2>
             <p className="text-gray-500">
               Please wait while we verify your credentials...
@@ -65,7 +64,7 @@ export default function OrganizerVerifyPage() {
       fallback={
         <div className="min-h-screen flex items-center justify-center">
           <div className="flex flex-col items-center gap-4 text-gold">
-            <Loader2 className="h-8 w-8 animate-spin text-gold" />
+            <Loading size="lg" />
             <h2 className="text-2xl font-bold">Loading...</h2>
           </div>
         </div>

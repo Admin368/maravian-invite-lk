@@ -30,6 +30,7 @@ import { ManageOrganizers } from "@/components/manage-organizers";
 import { EditGuestForm } from "@/components/edit-guest-form";
 import { useRouter, useSearchParams } from "next/navigation";
 import copy from "copy-to-clipboard";
+import { Loading } from "./ui/loading";
 
 // Update the Guest type to include joined_wechat, email_sent, and no_email
 type Guest = {
@@ -56,7 +57,7 @@ type Stats = {
 
 type OrganizerDashboardProps = {
   guests: Guest[];
-  stats: Stats;
+  stats?: Stats;
 };
 
 export function OrganizerDashboard({ guests, stats }: OrganizerDashboardProps) {
@@ -329,7 +330,7 @@ export function OrganizerDashboard({ guests, stats }: OrganizerDashboardProps) {
                         disabled={isLoading[guest.id.toString()]}
                       >
                         {isLoading[guest.id.toString()] ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <Loading size="lg" />
                         ) : (
                           <Mail className="h-4 w-4 mr-1" />
                         )}
@@ -429,7 +430,7 @@ export function OrganizerDashboard({ guests, stats }: OrganizerDashboardProps) {
               className="bg-black hover:bg-black/90"
             >
               {isLoading.all ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                <Loading size="lg" />
               ) : (
                 <Mail className="h-4 w-4 mr-2" />
               )}
@@ -441,7 +442,7 @@ export function OrganizerDashboard({ guests, stats }: OrganizerDashboardProps) {
               variant="outline"
             >
               {isLoading.pending ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                <Loading size="lg" />
               ) : (
                 <Mail className="h-4 w-4 mr-2" />
               )}

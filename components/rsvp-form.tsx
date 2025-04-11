@@ -25,8 +25,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
 import { toast } from "react-toastify";
+import { Loading } from "./ui/loading";
 
 const formSchema = z.object({
   status: z.enum(["attending", "not_attending"]),
@@ -218,7 +218,7 @@ export function RsvpForm({
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loading size="lg" />
                   Submitting...
                 </>
               ) : (

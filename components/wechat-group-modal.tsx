@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Loader2 } from "lucide-react";
 import { toast } from "react-toastify";
+import { Loading } from "./ui/loading";
 
 type WeChat = {
   userId: number;
@@ -108,7 +109,7 @@ export function WeChatGroupModal({
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loading size="lg" />
                   Updating...
                 </>
               ) : (

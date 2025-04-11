@@ -27,6 +27,7 @@ import {
 import { toast } from "react-toastify";
 import { Loader2, UserPlus } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { Loading } from "./ui/loading";
 
 export function AddGuestForm({ onGuestAdded }: { onGuestAdded: () => void }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -176,7 +177,7 @@ export function AddGuestForm({ onGuestAdded }: { onGuestAdded: () => void }) {
               <Button type="submit" disabled={isLoading}>
                 {isLoading ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loading size="lg" />
                     Adding...
                   </>
                 ) : (

@@ -7,7 +7,15 @@ import { LogOut } from "lucide-react";
 export function UserFooter() {
   const { user, logout } = useAuth();
 
-  if (!user) return null;
+  if (!user)
+    return (
+      <div
+        style={{ height: "50px" }}
+        className="p-2 bg-background/20 backdrop-blur-sm border-t border-border/40 text-center text-xl font-bold text-gold flex items-center justify-center"
+      >
+        Layla & Kondwani Engagement
+      </div>
+    );
 
   return (
     <footer className="p-2 bg-background/20 backdrop-blur-sm border-t border-border/40">
