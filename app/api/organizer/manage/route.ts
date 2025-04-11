@@ -6,9 +6,10 @@ import {
   addOrganizer,
   removeOrganizer,
   updateOrganizer,
+  createInvitation,
 } from "@/lib/db";
 import { getSession } from "@/lib/auth";
-import { sendOrganizerStatusEmail } from "@/lib/email";
+import { sendMagicLink, sendOrganizerStatusEmail } from "@/lib/email";
 import { neon } from "@neondatabase/serverless";
 
 const sql = neon(process.env.DATABASE_URL!);
@@ -53,8 +54,10 @@ export async function POST(request: Request) {
     // Add as organizer
     await addOrganizer(existingUser.id);
 
-    // Send email notification
-    await sendOrganizerStatusEmail(email, name, true);
+    // Send email link to verify accepting organizer role
+    const invitation = await createInvitation(existingUser.id);
+    await sendMagicLink(email, invitation.token, true, name);
+    // await sendOrganizerStatusEmail(email, name, true);
 
     return NextResponse.json({ message: "Organizer added successfully" });
   } catch (error) {
