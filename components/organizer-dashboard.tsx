@@ -462,9 +462,9 @@ export function OrganizerDashboard({ guests, stats }: OrganizerDashboardProps) {
             <TabsTrigger value="guests">Guests</TabsTrigger>
             <TabsTrigger value="organizers">Organizers</TabsTrigger>
           </TabsList>
-          <TabsContent value="guests" className="space-y-4">
+          <TabsContent value="guests" className="">
             <Tabs defaultValue="all">
-              <TabsList>
+              <TabsList className="w-full overflow-x-auto justify-start">
                 <TabsTrigger value="all">
                   All Guests ({filteredGuests.length})
                 </TabsTrigger>
