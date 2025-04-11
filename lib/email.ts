@@ -36,7 +36,7 @@ export async function sendMagicLink(
   name: string
 ) {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-  const magicLinkUrl = `${baseUrl}/${
+  const magicLinkUrl = `https://${baseUrl}/${
     isOrganizer ? "organizer" : "invitation"
   }/verify?token=${token}`;
 
