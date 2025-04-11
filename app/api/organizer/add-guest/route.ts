@@ -27,8 +27,10 @@ export async function POST(request: NextRequest) {
 
     if (noEmail) {
       // Generate a temporary email with timestamp
-      const timestamp = Date.now();
-      userEmail = `${timestamp}@noemail.com`;
+      // const timestamp = Date.now();
+      // name with no space and lowercase
+      const name_escaped_small = name.toLowerCase().replace(/ /g, "_");
+      userEmail = `${name_escaped_small}@noemail.com`;
       shouldSendEmail = false;
     } else if (!email) {
       return NextResponse.json(
