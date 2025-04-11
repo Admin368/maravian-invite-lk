@@ -95,14 +95,14 @@ export function OrganizerDashboard({ guests, stats }: OrganizerDashboardProps) {
     (guest) => guest.status === "not_attending"
   );
 
-  async function sendInvite(guestId: number, email: string) {
+  async function sendInvite(guestId: number, email: string, name: string) {
     setIsLoading((prev) => ({ ...prev, [guestId]: true }));
 
     try {
       const response = await fetch("/api/organizer/send-invite", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ guestId, email }),
+        body: JSON.stringify({ guestId, email, name }),
       });
 
       if (!response.ok) {
@@ -286,7 +286,9 @@ export function OrganizerDashboard({ guests, stats }: OrganizerDashboardProps) {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => sendInvite(guest.id, guest.email)}
+                      onClick={() =>
+                        sendInvite(guest.id, guest.email, guest.name)
+                      }
                       disabled={isLoading[guest.id.toString()]}
                     >
                       {isLoading[guest.id.toString()] ? (

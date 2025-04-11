@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { guestId, email } = await request.json();
+    const { guestId, email, name } = await request.json();
 
     if (!guestId || !email) {
       return NextResponse.json(
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     const invitation = await createInvitation(guestId);
 
     // Send magic link email
-    await sendMagicLink(email, invitation.token, false, invitation.name);
+    await sendMagicLink(email, invitation.token, false, name);
 
     // Update email sent status
     await updateEmailSentStatus(guestId, true);
