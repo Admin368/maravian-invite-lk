@@ -22,11 +22,14 @@ import {
   CheckCircle,
   XCircle,
   Clock,
+  Copy,
 } from "lucide-react";
 import { AddGuestForm } from "@/components/add-guest-form";
 import { GenerateInviteLink } from "@/components/generate-invite-link";
 import { ManageOrganizers } from "@/components/manage-organizers";
+import { EditGuestForm } from "@/components/edit-guest-form";
 import { useRouter, useSearchParams } from "next/navigation";
+import copy from "copy-to-clipboard";
 
 // Update the Guest type to include joined_wechat and email_sent
 type Guest = {
@@ -38,6 +41,7 @@ type Guest = {
   plus_one_name: string | null;
   updated_at: string;
   joined_wechat?: boolean;
+  wechat_id?: string;
   email_sent: boolean;
 };
 
@@ -216,7 +220,7 @@ export function OrganizerDashboard({ guests, stats }: OrganizerDashboardProps) {
     }
   };
 
-  // Update the renderGuestTable function to include WeChat status and generate link button
+  // Update the renderGuestTable function to include WeChat ID and edit button
   function renderGuestTable(guestList: Guest[]) {
     return (
       <Table>
@@ -226,6 +230,7 @@ export function OrganizerDashboard({ guests, stats }: OrganizerDashboardProps) {
             <TableHead>Email</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Plus One</TableHead>
+            <TableHead>WeChat ID</TableHead>
             <TableHead>WeChat</TableHead>
             <TableHead>Email Sent</TableHead>
             <TableHead>Last Updated</TableHead>
@@ -235,7 +240,7 @@ export function OrganizerDashboard({ guests, stats }: OrganizerDashboardProps) {
         <TableBody>
           {guestList.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={8} className="text-center">
+              <TableCell colSpan={9} className="text-center">
                 No guests found
               </TableCell>
             </TableRow>
@@ -262,6 +267,25 @@ export function OrganizerDashboard({ guests, stats }: OrganizerDashboardProps) {
                     </div>
                   ) : (
                     <Badge variant="outline">No</Badge>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {guest.wechat_id ? (
+                    <div className="flex items-center gap-2">
+                      <span>{guest.wechat_id}</span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          copy(guest.wechat_id!);
+                          toast.success("WeChat ID copied to clipboard");
+                        }}
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <span className="text-gray-400">-</span>
                   )}
                 </TableCell>
                 <TableCell>
@@ -302,6 +326,15 @@ export function OrganizerDashboard({ guests, stats }: OrganizerDashboardProps) {
                       guestId={guest.id}
                       guestName={guest.name}
                       guestEmail={guest.email}
+                    />
+                    <EditGuestForm
+                      guest={{
+                        id: guest.id,
+                        name: guest.name,
+                        email: guest.email,
+                        wechatId: guest.wechat_id,
+                      }}
+                      onGuestUpdated={handleGuestAdded}
                     />
                   </div>
                 </TableCell>
