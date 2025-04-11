@@ -13,7 +13,6 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
 } from "@/components/ui/form";
 import {
   Dialog,
@@ -25,44 +24,50 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "react-toastify";
-import { Loader2, UserPlus } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
+import { Loader2, Pencil, Copy, Check } from "lucide-react";
+import copy from "copy-to-clipboard";
 
-export function AddGuestForm({ onGuestAdded }: { onGuestAdded: () => void }) {
+const formSchema = z.object({
+  name: z.string().min(2, { message: "Name must be at least 2 characters" }),
+  email: z.string().email({ message: "Please enter a valid email address" }),
+  wechatId: z.string().optional(),
+});
+
+type EditGuestFormProps = {
+  guest: {
+    id: number;
+    name: string;
+    email: string;
+    wechatId?: string;
+  };
+  onGuestUpdated: () => void;
+};
+
+export function EditGuestForm({ guest, onGuestUpdated }: EditGuestFormProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isNoEmail, setIsNoEmail] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-  const formSchema = z.object({
-    name: z.string().min(2, { message: "Name must be at least 2 characters" }),
-    email: isNoEmail
-      ? z.string().optional()
-      : z.string().email({ message: "Please enter a valid email address" }),
-    noEmail: z.boolean(),
-    wechatId: z.string().optional(),
-  });
-  type FormValues = z.infer<typeof formSchema>;
-
-  const form = useForm<FormValues>({
+  const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
-      email: "",
-      wechatId: "",
-      noEmail: false,
+      name: guest.name,
+      email: guest.email,
+      wechatId: guest.wechatId || "",
     },
   });
 
-  // const watchNoEmail = form.watch("noEmail");
-
-  async function onSubmit(values: FormValues) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/organizer/add-guest", {
+      const response = await fetch("/api/organizer/update-guest", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
+        body: JSON.stringify({
+          guestId: guest.id,
+          ...values,
+        }),
       });
 
       const data = await response.json();
@@ -71,34 +76,42 @@ export function AddGuestForm({ onGuestAdded }: { onGuestAdded: () => void }) {
         throw new Error(data.error || "Something went wrong");
       }
 
-      toast.success(`${values.name} has been added to the guest list.`);
-
+      toast.success("Guest information updated successfully");
       form.reset();
       setIsOpen(false);
-      onGuestAdded();
+      onGuestUpdated();
     } catch (error) {
-      console.error("Add guest error:", error);
+      console.error("Update guest error:", error);
       toast.error(
-        error instanceof Error ? error.message : "Failed to add guest"
+        error instanceof Error ? error.message : "Failed to update guest"
       );
     } finally {
       setIsLoading(false);
     }
   }
 
+  const copyToClipboard = () => {
+    const wechatId = form.getValues("wechatId");
+    if (wechatId) {
+      copy(wechatId);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button>
-          <UserPlus className="h-4 w-4 mr-2" />
-          Add Guest
+        <Button variant="outline" size="sm" className="ml-2">
+          <Pencil className="h-4 w-4 mr-1" />
+          Edit
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add New Guest</DialogTitle>
+          <DialogTitle>Edit Guest Information</DialogTitle>
           <DialogDescription>
-            Add a new guest to the invitation list.
+            Update guest details and WeChat ID.
           </DialogDescription>
         </DialogHeader>
 
@@ -120,44 +133,18 @@ export function AddGuestForm({ onGuestAdded }: { onGuestAdded: () => void }) {
 
             <FormField
               control={form.control}
-              name="noEmail"
+              name="email"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                  <div className="space-y-0.5">
-                    <FormLabel className="text-base">No Email</FormLabel>
-                    <FormDescription>
-                      Check this if you want to add a guest without an email
-                      address
-                    </FormDescription>
-                  </div>
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={(checked) => {
-                        field.onChange(checked);
-                        setIsNoEmail(checked);
-                      }}
-                    />
+                    <Input placeholder="guest@example.com" {...field} />
                   </FormControl>
+                  <FormMessage />
                 </FormItem>
               )}
             />
 
-            {!isNoEmail && (
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input placeholder="guest@example.com" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
             <FormField
               control={form.control}
               name="wechatId"
@@ -165,7 +152,23 @@ export function AddGuestForm({ onGuestAdded }: { onGuestAdded: () => void }) {
                 <FormItem>
                   <FormLabel>WeChat ID</FormLabel>
                   <FormControl>
-                    <Input placeholder="WeChat ID" {...field} />
+                    <div className="flex items-center space-x-2">
+                      <Input placeholder="WeChat ID" {...field} />
+                      {field.value && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={copyToClipboard}
+                        >
+                          {copied ? (
+                            <Check className="h-4 w-4" />
+                          ) : (
+                            <Copy className="h-4 w-4" />
+                          )}
+                        </Button>
+                      )}
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -177,10 +180,10 @@ export function AddGuestForm({ onGuestAdded }: { onGuestAdded: () => void }) {
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Adding...
+                    Updating...
                   </>
                 ) : (
-                  "Add Guest"
+                  "Update Guest"
                 )}
               </Button>
             </DialogFooter>

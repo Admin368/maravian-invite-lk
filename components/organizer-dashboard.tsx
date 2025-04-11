@@ -22,13 +22,16 @@ import {
   CheckCircle,
   XCircle,
   Clock,
+  Copy,
 } from "lucide-react";
 import { AddGuestForm } from "@/components/add-guest-form";
 import { GenerateInviteLink } from "@/components/generate-invite-link";
 import { ManageOrganizers } from "@/components/manage-organizers";
+import { EditGuestForm } from "@/components/edit-guest-form";
 import { useRouter, useSearchParams } from "next/navigation";
+import copy from "copy-to-clipboard";
 
-// Update the Guest type to include joined_wechat and email_sent
+// Update the Guest type to include joined_wechat, email_sent, and no_email
 type Guest = {
   id: number;
   email: string;
@@ -38,7 +41,9 @@ type Guest = {
   plus_one_name: string | null;
   updated_at: string;
   joined_wechat?: boolean;
+  wechat_id?: string;
   email_sent: boolean;
+  no_email?: boolean;
 };
 
 type Stats = {
@@ -216,7 +221,7 @@ export function OrganizerDashboard({ guests, stats }: OrganizerDashboardProps) {
     }
   };
 
-  // Update the renderGuestTable function to include WeChat status and generate link button
+  // Update the renderGuestTable function to include WeChat ID and edit button
   function renderGuestTable(guestList: Guest[]) {
     return (
       <Table>
@@ -226,6 +231,7 @@ export function OrganizerDashboard({ guests, stats }: OrganizerDashboardProps) {
             <TableHead>Email</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Plus One</TableHead>
+            <TableHead>WeChat ID</TableHead>
             <TableHead>WeChat</TableHead>
             <TableHead>Email Sent</TableHead>
             <TableHead>Last Updated</TableHead>
@@ -235,7 +241,7 @@ export function OrganizerDashboard({ guests, stats }: OrganizerDashboardProps) {
         <TableBody>
           {guestList.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={8} className="text-center">
+              <TableCell colSpan={9} className="text-center">
                 No guests found
               </TableCell>
             </TableRow>
@@ -243,7 +249,18 @@ export function OrganizerDashboard({ guests, stats }: OrganizerDashboardProps) {
             guestList.map((guest) => (
               <TableRow key={guest.id}>
                 <TableCell className="font-medium">{guest.name}</TableCell>
-                <TableCell>{guest.email}</TableCell>
+                <TableCell>
+                  {guest.email.endsWith("@no_email.com") ? (
+                    <Badge
+                      variant="outline"
+                      className="text-amber-500 border-amber-500"
+                    >
+                      No Email
+                    </Badge>
+                  ) : (
+                    guest.email
+                  )}
+                </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
                     {getStatusIcon(guest.status)}
@@ -265,6 +282,25 @@ export function OrganizerDashboard({ guests, stats }: OrganizerDashboardProps) {
                   )}
                 </TableCell>
                 <TableCell>
+                  {guest.wechat_id ? (
+                    <div className="flex items-center gap-2">
+                      <span>{guest.wechat_id}</span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          copy(guest.wechat_id!);
+                          toast.success("WeChat ID copied to clipboard");
+                        }}
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <span className="text-gray-400">-</span>
+                  )}
+                </TableCell>
+                <TableCell>
                   {guest.joined_wechat ? (
                     <Badge className="bg-green-500">Joined</Badge>
                   ) : (
@@ -283,25 +319,36 @@ export function OrganizerDashboard({ guests, stats }: OrganizerDashboardProps) {
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() =>
-                        sendInvite(guest.id, guest.email, guest.name)
-                      }
-                      disabled={isLoading[guest.id.toString()]}
-                    >
-                      {isLoading[guest.id.toString()] ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Mail className="h-4 w-4 mr-1" />
-                      )}
-                      Email
-                    </Button>
+                    {!guest.email.endsWith("@no_email.com") && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() =>
+                          sendInvite(guest.id, guest.email, guest.name)
+                        }
+                        disabled={isLoading[guest.id.toString()]}
+                      >
+                        {isLoading[guest.id.toString()] ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Mail className="h-4 w-4 mr-1" />
+                        )}
+                        Email
+                      </Button>
+                    )}
                     <GenerateInviteLink
                       guestId={guest.id}
                       guestName={guest.name}
                       guestEmail={guest.email}
+                    />
+                    <EditGuestForm
+                      guest={{
+                        id: guest.id,
+                        name: guest.name,
+                        email: guest.email,
+                        wechatId: guest.wechat_id,
+                      }}
+                      onGuestUpdated={handleGuestAdded}
                     />
                   </div>
                 </TableCell>

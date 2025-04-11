@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "react-toastify";
-import { Loader2, Trash2, Edit2, Check, X } from "lucide-react";
+import { Loader2, Trash2, Edit2, Check, X, Mail } from "lucide-react";
 
 type Organizer = {
   id: number;
@@ -144,6 +144,32 @@ export function ManageOrganizers() {
     }
   }
 
+  async function handleSendEmail(organizer: Organizer) {
+    try {
+      const response = await fetch("/api/organizer/manage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: organizer.email,
+          name: organizer.name,
+          resend: true,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to send email");
+      }
+
+      toast.success(`Email sent to ${organizer.email}`);
+    } catch (error) {
+      console.error("Error sending email:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to send email"
+      );
+    }
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -239,6 +265,13 @@ export function ManageOrganizers() {
                             onClick={() => startEditing(organizer)}
                           >
                             <Edit2 className="h-4 w-4 text-blue-500" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleSendEmail(organizer)}
+                          >
+                            <Mail className="h-4 w-4 text-green-500" />
                           </Button>
                           <Button
                             variant="ghost"

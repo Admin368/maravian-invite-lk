@@ -29,77 +29,45 @@ export function GenerateInviteLink({
 }: GenerateInviteLinkProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [inviteLink, setInviteLink] = useState("");
+  const [inviteLink, setInviteLink] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+
+  const isNoEmail = guestEmail.endsWith("@no_email.com");
 
   async function generateLink() {
     setIsLoading(true);
-    setCopied(false);
 
     try {
       const response = await fetch("/api/organizer/generate-link", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ guestId, guestEmail }),
+        body: JSON.stringify({ guestId }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Failed to generate invitation link");
+        throw new Error(data.error || "Something went wrong");
       }
 
-      const data = await response.json();
       setInviteLink(data.inviteLink);
     } catch (error) {
       console.error("Generate link error:", error);
       toast.error(
-        error instanceof Error
-          ? error.message
-          : "Failed to generate invitation link"
+        error instanceof Error ? error.message : "Failed to generate link"
       );
     } finally {
       setIsLoading(false);
     }
   }
 
-  async function copyToClipboard({ _inviteLink }: { _inviteLink: string }) {
-    try {
-      // Try the modern Clipboard API first
-      // if (navigator.clipboard && window.isSecureContext) {
-      //   alert("Copying to clipboard");
-      //   await navigator.clipboard.writeText(_inviteLink);
-      // } else {
-      //   // Fallback for older browsers or non-secure contexts
-      //   const textArea = document.createElement("textarea");
-      //   textArea.value = inviteLink;
-      //   textArea.style.position = "fixed";
-      //   textArea.style.left = "-999999px";
-      //   textArea.style.top = "-999999px";
-      //   document.body.appendChild(textArea);
-      //   textArea.focus();
-      //   textArea.select();
-
-      //   const successful = document.execCommand("copy");
-      //   if (!successful) {
-      //     throw new Error("Failed to copy text");
-      //   }
-
-      //   document.body.removeChild(textArea);
-      // }
-      if (!_inviteLink) {
-        throw new Error("No invite link provided");
-      }
-      copy(_inviteLink);
+  const copyToClipboard = () => {
+    if (inviteLink) {
+      copy(inviteLink);
       setCopied(true);
-      toast.success("Invitation link copied to clipboard");
-
-      // Reset copied state after 2 seconds
       setTimeout(() => setCopied(false), 2000);
-    } catch (error) {
-      console.error("Copy error:", error);
-      toast.error("Failed to copy to clipboard");
     }
-  }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -113,8 +81,9 @@ export function GenerateInviteLink({
         <DialogHeader>
           <DialogTitle>Invitation Link for {guestName}</DialogTitle>
           <DialogDescription>
-            Generate a direct invitation link that you can share manually with
-            the guest.
+            {isNoEmail
+              ? "Generate a direct invitation link that you can share manually with the guest."
+              : "Generate a direct invitation link that you can share manually with the guest."}
           </DialogDescription>
         </DialogHeader>
 
@@ -147,10 +116,7 @@ export function GenerateInviteLink({
                 readOnly
                 className="flex-1"
               />
-              <Button
-                size="icon"
-                onClick={() => copyToClipboard({ _inviteLink: inviteLink })}
-              >
+              <Button size="icon" onClick={copyToClipboard}>
                 {copied ? (
                   <Check className="h-4 w-4" />
                 ) : (
@@ -161,7 +127,7 @@ export function GenerateInviteLink({
           )}
         </div>
 
-        <DialogFooter className="sm:justify-start">
+        <DialogFooter>
           <Button
             type="button"
             variant="secondary"

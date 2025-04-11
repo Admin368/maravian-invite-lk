@@ -21,12 +21,13 @@ export async function getUserByEmail(email: string) {
 export async function createUser(
   email: string,
   name: string,
-  isOrganizer = false
+  isOrganizer = false,
+  wechatId?: string
 ) {
   try {
     const result = await sql`
-      INSERT INTO users (email, name, is_organizer, email_sent)
-      VALUES (${email}, ${name}, ${isOrganizer}, false)
+      INSERT INTO users (email, name, is_organizer, email_sent, wechat_id)
+      VALUES (${email}, ${name}, ${isOrganizer}, false, ${wechatId})
       RETURNING *
     `;
     return result[0];
@@ -156,7 +157,7 @@ export async function getOrganizers() {
 export async function getAllGuests() {
   try {
     return await sql`
-      SELECT u.id, u.email, u.name, r.status, r.plus_one, r.plus_one_name, r.updated_at, r.joined_wechat, u.email_sent
+      SELECT u.id, u.email, u.name, r.status, r.plus_one, r.plus_one_name, r.updated_at, r.joined_wechat, u.wechat_id, u.email_sent
       FROM users u
       LEFT JOIN rsvps r ON u.id = r.user_id
       WHERE u.is_organizer = false
