@@ -52,28 +52,18 @@ export async function sendMagicLink(
     html: isOrganizer
       ? `
       <!DOCTYPE html>
-      <style>
-        button {
-            display: inline-block;
-            padding: 10px 20px;
-            font-size: 16px;
-            color: #fff;
-            background-color: #D4AF37;
-            border-radius: 5px;
-            text-align: center;
-            text-decoration: none;
-        }
-      </style>
-      <body>
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #000; text-align: center;">Organizer Access</h2>
-          <p>Click the link below to access the organizer dashboard:</p>
-          <a href="${magicLinkUrl}" target="_blank" style="display: inline-block; padding: 10px 20px; font-size: 16px; color: #fff; background-color: #D4AF37; border-radius: 5px; text-align: center; text-decoration: none; margin: 15px 0;">Go to Access</a>
-          <p>This link will expire after use.</p>
+      <body style="margin: 0; padding: 0; background-color: #f9f9f9;">
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 30px; background-color: #ffffff; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+          <h2 style="color: #D4AF37; text-align: center; margin-bottom: 30px; font-size: 28px;">Organizer Access</h2>
+          <div style="text-align: center;">
+            <p style="color: #333333; font-size: 16px; line-height: 1.6; margin-bottom: 25px;">Click the link below to access the organizer dashboard:</p>
+            <a href="${magicLinkUrl}" target="_blank" style="display: inline-block; padding: 12px 30px; font-size: 16px; color: #ffffff; background-color: #D4AF37; border-radius: 5px; text-align: center; text-decoration: none; margin: 15px 0; transition: background-color 0.3s ease;">Go to Access</a>
+            <p style="color: #666666; font-size: 14px; margin-top: 25px;">This link will expire after use.</p>
+          </div>
         </div>
-        </body>
-        </html>
-      `
+      </body>
+      </html>
+        `
       : `
     <!DOCTYPE html>
     <body>
@@ -89,12 +79,12 @@ export async function sendMagicLink(
           <h4 style="color: #D4AF37;">Dear ${name},</h4>
           <p>You have been invited to the engagement celebration for Layla and Kondwani.</p>
           <p>Please click the button below to view all the details and RSVP.</p>
-          <p>This is a surprise proposal for Layla, please do not share this link or discuss the date and time with the bride to be as she is expecting this event to happen on a different date.</p>
+          <p style="color: red;">This is a surprise proposal for Layla, please do not share this link or discuss the date and time with the bride to be, as she is expecting this event to happen on a different date.</p>
         </div>
-        <p>if you cannot click the link copy and paste it into your browser</p>
-        <p>${magicLinkUrl}</p>
         <div style="text-align: center; margin: 40px 0 20px;">
           <a href="${magicLinkUrl}" style="display: inline-block; padding: 12px 25px; background-color: #D4AF37; color: #fff; text-decoration: none; border-radius: 4px; font-weight: bold; margin: 15px 0;">View Details & RSVP</a>
+          <p>if you cannot click the link copy and paste it into your browser</p>
+          <p>${magicLinkUrl}</p>
           <p style="margin-top: 10px; font-size: 0.8em; color: #666;">This link will expire after use.</p>
         </div>
       </div>
