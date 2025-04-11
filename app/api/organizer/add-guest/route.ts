@@ -16,17 +16,29 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { name, email } = await request.json();
+    const { name, email, noEmail, wechatId } = await request.json();
 
-    if (!name || !email) {
+    if (!name) {
+      return NextResponse.json({ error: "Name is required" }, { status: 400 });
+    }
+
+    let userEmail = email;
+    let shouldSendEmail = true;
+
+    if (noEmail) {
+      // Generate a temporary email with timestamp
+      const timestamp = Date.now();
+      userEmail = `${timestamp}@no_email.com`;
+      shouldSendEmail = false;
+    } else if (!email) {
       return NextResponse.json(
-        { error: "Name and email are required" },
+        { error: "Email is required when 'No Email' is not selected" },
         { status: 400 }
       );
     }
 
     // Check if user already exists
-    const existingUser = await getUserByEmail(email);
+    const existingUser = await getUserByEmail(userEmail);
 
     if (existingUser) {
       return NextResponse.json(
@@ -35,13 +47,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create new user
-    const user = await createUser(email, name, false);
+    // Create new user with WeChat ID
+    const user = await createUser(userEmail, name, false, wechatId);
 
-    // Create invitation and send email
+    // Create invitation and send email if needed
     const invitation = await createInvitation(user.id);
-    await sendMagicLink(email, invitation.token, false, name);
-    await updateEmailSentStatus(user.id, true);
+
+    if (shouldSendEmail) {
+      await sendMagicLink(userEmail, invitation.token, false, name);
+      await updateEmailSentStatus(user.id, true);
+    }
 
     return NextResponse.json({ success: true, user }, { status: 200 });
   } catch (error) {

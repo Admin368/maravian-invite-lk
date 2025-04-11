@@ -21,12 +21,13 @@ export async function getUserByEmail(email: string) {
 export async function createUser(
   email: string,
   name: string,
-  isOrganizer = false
+  isOrganizer = false,
+  wechatId?: string
 ) {
   try {
     const result = await sql`
-      INSERT INTO users (email, name, is_organizer, email_sent)
-      VALUES (${email}, ${name}, ${isOrganizer}, false)
+      INSERT INTO users (email, name, is_organizer, email_sent, wechat_id)
+      VALUES (${email}, ${name}, ${isOrganizer}, false, ${wechatId})
       RETURNING *
     `;
     return result[0];

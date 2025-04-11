@@ -13,6 +13,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import {
   Dialog,
@@ -25,25 +26,36 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "react-toastify";
 import { Loader2, UserPlus } from "lucide-react";
-
-const formSchema = z.object({
-  name: z.string().min(2, { message: "Name must be at least 2 characters" }),
-  email: z.string().email({ message: "Please enter a valid email address" }),
-});
+import { Switch } from "@/components/ui/switch";
 
 export function AddGuestForm({ onGuestAdded }: { onGuestAdded: () => void }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isNoEmail, setIsNoEmail] = useState(false);
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const formSchema = z.object({
+    name: z.string().min(2, { message: "Name must be at least 2 characters" }),
+    email: isNoEmail
+      ? z.string().optional()
+      : z.string().email({ message: "Please enter a valid email address" }),
+    noEmail: z.boolean(),
+    wechatId: z.string().optional(),
+  });
+  type FormValues = z.infer<typeof formSchema>;
+
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
       email: "",
+      wechatId: "",
+      noEmail: false,
     },
   });
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  // const watchNoEmail = form.watch("noEmail");
+
+  async function onSubmit(values: FormValues) {
     setIsLoading(true);
 
     try {
@@ -108,12 +120,52 @@ export function AddGuestForm({ onGuestAdded }: { onGuestAdded: () => void }) {
 
             <FormField
               control={form.control}
-              name="email"
+              name="noEmail"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">No Email</FormLabel>
+                    <FormDescription>
+                      Check this if you want to add a guest without an email
+                      address
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={(checked) => {
+                        field.onChange(checked);
+                        setIsNoEmail(checked);
+                      }}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
+            {!isNoEmail && (
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input placeholder="guest@example.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+            <FormField
+              control={form.control}
+              name="wechatId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>WeChat ID</FormLabel>
                   <FormControl>
-                    <Input placeholder="guest@example.com" {...field} />
+                    <Input placeholder="WeChat ID" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

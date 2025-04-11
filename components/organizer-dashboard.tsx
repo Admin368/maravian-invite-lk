@@ -31,7 +31,7 @@ import { EditGuestForm } from "@/components/edit-guest-form";
 import { useRouter, useSearchParams } from "next/navigation";
 import copy from "copy-to-clipboard";
 
-// Update the Guest type to include joined_wechat and email_sent
+// Update the Guest type to include joined_wechat, email_sent, and no_email
 type Guest = {
   id: number;
   email: string;
@@ -43,6 +43,7 @@ type Guest = {
   joined_wechat?: boolean;
   wechat_id?: string;
   email_sent: boolean;
+  no_email?: boolean;
 };
 
 type Stats = {
@@ -248,7 +249,18 @@ export function OrganizerDashboard({ guests, stats }: OrganizerDashboardProps) {
             guestList.map((guest) => (
               <TableRow key={guest.id}>
                 <TableCell className="font-medium">{guest.name}</TableCell>
-                <TableCell>{guest.email}</TableCell>
+                <TableCell>
+                  {guest.email.endsWith("@no_email.com") ? (
+                    <Badge
+                      variant="outline"
+                      className="text-amber-500 border-amber-500"
+                    >
+                      No Email
+                    </Badge>
+                  ) : (
+                    guest.email
+                  )}
+                </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
                     {getStatusIcon(guest.status)}
@@ -307,21 +319,23 @@ export function OrganizerDashboard({ guests, stats }: OrganizerDashboardProps) {
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() =>
-                        sendInvite(guest.id, guest.email, guest.name)
-                      }
-                      disabled={isLoading[guest.id.toString()]}
-                    >
-                      {isLoading[guest.id.toString()] ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Mail className="h-4 w-4 mr-1" />
-                      )}
-                      Email
-                    </Button>
+                    {!guest.email.endsWith("@no_email.com") && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() =>
+                          sendInvite(guest.id, guest.email, guest.name)
+                        }
+                        disabled={isLoading[guest.id.toString()]}
+                      >
+                        {isLoading[guest.id.toString()] ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Mail className="h-4 w-4 mr-1" />
+                        )}
+                        Email
+                      </Button>
+                    )}
                     <GenerateInviteLink
                       guestId={guest.id}
                       guestName={guest.name}
