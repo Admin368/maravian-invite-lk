@@ -111,12 +111,17 @@ export function InvitationDetails({ user, rsvp }: InvitationDetailsProps) {
           <div className="mt-8 p-4 bg-gold/10 rounded-lg text-center">
             <h3 className="font-medium mb-2">Color Theme</h3>
             <div className="flex justify-center gap-4 mb-2">
-              <div className="w-8 h-8 rounded-full bg-white border border-gray-200"></div>
-              <div className="w-8 h-8 rounded-full bg-black"></div>
-              <div className="w-8 h-8 rounded-full bg-amber-500"></div>
+              <div className="w-10 h-8 rounded-full bg-white border border-gray-200"></div>
+              <div className="w-10 h-8 rounded-full bg-black"></div>
+              <div className="w-10 h-8 rounded-full bg-amber-500"></div>
+            </div>
+            <div className="flex justify-center gap-4 mb-2 text-center">
+              <div className="w-10 h-8">White</div>
+              <div className="w-10 h-8">Black</div>
+              <div className="w-10 h-8">Gold</div>
             </div>
             <p className="text-sm">
-              (Kindly dress in theme to honor the couple)
+              (Kindly dress in theme to honor the couple!)
             </p>
           </div>
 
