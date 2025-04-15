@@ -280,7 +280,8 @@ export function MenuOrder() {
       {orderItems.length > 0 && (
         <div className="fixed bottom-0 left-0 right-0 bg-background border-t shadow-lg p-4">
           <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
-            <div className="container mx-auto flex items-center justify-between">
+          <p className="text-black text-center pb-2">Please Confirm your order before leaving!</p>
+            <div className="container mx-auto flex items-center justify-between flex-wrap">
               <SheetTrigger asChild>
                 <Button
                   variant="outline"
@@ -291,13 +292,10 @@ export function MenuOrder() {
                   items
                 </Button>
               </SheetTrigger>
-              <div className="flex items-center gap-4">
-                <p className="text-lg font-semibold">
-                  Total: ￥{calculateTotal().toFixed(2)}
-                </p>
+              <div className="flex items-center gap-4 text-black">
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button size="lg">Place Order</Button>
+                    <Button size="lg">Confirm</Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
@@ -316,6 +314,9 @@ export function MenuOrder() {
                   </AlertDialogContent>
                 </AlertDialog>
               </div>
+              <p className="text-lg font-semibold text-black text-center">
+                  Total: ￥{calculateTotal().toFixed(2)}
+              </p>
             </div>
 
             <SheetContent side="bottom" className="h-[80vh]">
