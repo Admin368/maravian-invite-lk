@@ -23,6 +23,7 @@ import {
   XCircle,
   Clock,
   Copy,
+  Menu,
 } from "lucide-react";
 import { AddGuestForm } from "@/components/add-guest-form";
 import { GenerateInviteLink } from "@/components/generate-invite-link";
@@ -172,6 +173,29 @@ export function OrganizerDashboard({ guests, stats }: OrganizerDashboardProps) {
       );
     } finally {
       setIsLoading((prev) => ({ ...prev, pending: false }));
+    }
+  }
+
+  async function sendMenuEmail() {
+    setIsLoading((prev) => ({ ...prev, menu: true }));
+    try {
+      const response = await fetch("/api/organizer/send-menu-email", {
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to send menu email");
+      }
+
+      toast.success("Menu email sent to all attending guests");
+    } catch (error) {
+      console.error("Send menu email error:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to send menu email"
+      );
+    } finally {
+      setIsLoading((prev) => ({ ...prev, menu: false }));
     }
   }
 
@@ -410,6 +434,15 @@ export function OrganizerDashboard({ guests, stats }: OrganizerDashboardProps) {
             <div className="text-2xl font-bold">{pendingGuests.length}</div>
           </CardContent>
         </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Orders</CardTitle>
+            <Menu className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold"></div>
+          </CardContent>
+        </Card>
       </div>
 
       <div className="space-y-4">
@@ -447,6 +480,27 @@ export function OrganizerDashboard({ guests, stats }: OrganizerDashboardProps) {
                 <Mail className="h-4 w-4 mr-2" />
               )}
               Send to Pending
+            </Button>
+            <Button
+              onClick={()=>{
+                router.push("/menu/orders");
+              }}
+              variant="outline"
+            >
+              View Menu Orders
+            </Button>
+            <Button
+              onClick={sendMenuEmail}
+              // disabled={isLoading.pending}
+              disabled={true}
+              variant="outline"
+            >
+              {isLoading.pending ? (
+                <Loading size="lg" />
+              ) : (
+                <Mail className="h-4 w-4 mr-2" />
+              )}
+              Send Menu Email
             </Button>
           </div>
         </div>

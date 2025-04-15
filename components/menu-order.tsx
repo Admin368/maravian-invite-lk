@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { toast } from "@/components/ui/use-toast";
+// import { toast } from "@/components/ui/use-toast";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   AlertDialog,
@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Loading } from "./ui/loading";
+import { toast } from "react-toastify";
 
 interface MenuItem {
   id: number;
@@ -53,16 +54,16 @@ export function MenuOrder() {
   const fetchMenuItems = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch("/api/menu");
+      const response = await toast.promise(fetch("/api/menu"), {
+        pending: "Loading menu items...",
+        success: "Menu items loaded successfully!",
+        error: "Failed to load menu items",
+      });
       const data = await response.json();
       setMenuItems(data.filter((item: MenuItem) => item.isAvailable));
     } catch (error) {
       setError("Failed to fetch menu items");
-      toast({
-        title: "Error",
-        description: "Failed to fetch menu items",
-        variant: "destructive",
-      });
+      toast.error("Failed to fetch menu items");
     } finally {
       setIsLoading(false);
     }
@@ -120,31 +121,29 @@ export function MenuOrder() {
 
   const handlePlaceOrder = async () => {
     try {
-      const response = await fetch("/api/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          items: orderItems,
-          totalAmount: calculateTotal(),
+      const response = await toast.promise(
+        fetch("/api/orders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            items: orderItems,
+            totalAmount: calculateTotal(),
+          }),
         }),
-      });
+        {
+          pending: "Placing order...",
+          success: "Order placed successfully!",
+          error: "Failed to place order",
+        }
+      );
 
       if (!response.ok) throw new Error("Failed to place order");
 
       setOrderItems([]);
       setIsCartOpen(false);
-      toast({
-        title: "Order Placed Successfully! 🎉",
-        description: "Your order has been received and is being processed.",
-        variant: "default",
-      });
+      toast.success("Your order has been received.");
     } catch (error) {
-      toast({
-        title: "Error Placing Order",
-        description:
-          "There was a problem placing your order. Please try again.",
-        variant: "destructive",
-      });
+      toast.error("There was a problem placing your order. Please try again.");
     }
   };
 
@@ -167,10 +166,10 @@ export function MenuOrder() {
     const item = orderItems.find((i) => i.menuItemId === itemId);
     return item ? item.quantity : 0;
   };
-  if(error) {
+  if (error) {
     <div className="flex-1 h-full flex justify-center align-middle">
-        <pre className="text-red">There was an error, please reload</pre>
-      </div>
+      <pre className="text-red">There was an error, please reload</pre>
+    </div>;
   }
 
   if (isLoading) {
@@ -198,7 +197,7 @@ export function MenuOrder() {
               )}
               <h3 className="font-semibold">{item.name}</h3>
               <p className="text-sm text-gray-600">{item.description}</p>
-              <p className="font-semibold mt-2">${item.price.toFixed(2)}</p>
+              <p className="font-semibold mt-2">￥{item.price.toFixed(2)}</p>
 
               <div className="flex items-center justify-between mt-4 border-t pt-4">
                 <div className="flex items-center gap-3">
@@ -252,7 +251,7 @@ export function MenuOrder() {
               </SheetTrigger>
               <div className="flex items-center gap-4">
                 <p className="text-lg font-semibold">
-                  Total: ${calculateTotal().toFixed(2)}
+                  Total: ￥{calculateTotal().toFixed(2)}
                 </p>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
@@ -263,7 +262,7 @@ export function MenuOrder() {
                       <AlertDialogTitle>Confirm Order</AlertDialogTitle>
                       <AlertDialogDescription>
                         Are you sure you want to place this order? The total
-                        amount is ${calculateTotal().toFixed(2)}.
+                        amount is ￥{calculateTotal().toFixed(2)}.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -286,7 +285,7 @@ export function MenuOrder() {
                       <div>
                         <h3 className="font-semibold">{item.name}</h3>
                         <p className="text-sm">
-                          ${(item.price * item.quantity).toFixed(2)}
+                          ￥{(item.price * item.quantity).toFixed(2)}
                         </p>
                       </div>
                       <div className="flex items-center gap-3">
@@ -334,7 +333,7 @@ export function MenuOrder() {
                 <div className="border-t pt-4 mt-auto">
                   <div className="flex justify-between items-center mb-4">
                     <p className="text-lg font-semibold">
-                      Total: ${calculateTotal().toFixed(2)}
+                      Total: ￥{calculateTotal().toFixed(2)}
                     </p>
                   </div>
                   <AlertDialog>
@@ -348,7 +347,7 @@ export function MenuOrder() {
                         <AlertDialogTitle>Confirm Order</AlertDialogTitle>
                         <AlertDialogDescription>
                           Are you sure you want to place this order? The total
-                          amount is ${calculateTotal().toFixed(2)}.
+                          amount is ￥{calculateTotal().toFixed(2)}.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>

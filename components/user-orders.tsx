@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { toast } from "@/components/ui/use-toast";
+// import { toast } from "@/components/ui/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "react-toastify";
 
 interface OrderItem {
   id: number;
@@ -43,11 +44,7 @@ export function UserOrders() {
       const data = await response.json();
       setOrders(data);
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch your orders",
-        variant: "destructive",
-      });
+      toast.error("Failed to fetch your orders");
     } finally {
       setLoading(false);
     }
@@ -55,47 +52,53 @@ export function UserOrders() {
 
   const updateOrderItem = async (orderId: number, orderItem: OrderItem) => {
     try {
-      const response = await fetch(`/api/orders/${orderId}/items/${orderItem.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(orderItem),
-      });
+      const response = await toast.promise(
+        fetch(`/api/orders/${orderId}/items/${orderItem.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(orderItem),
+        }),
+        {
+          pending: "Updating Order... ",
+          success: "Order updated successfully",
+          error: "Failed to update order",
+        }
+      );
 
       if (!response.ok) throw new Error("Failed to update order item");
 
       await fetchOrders();
-      toast({
-        title: "Success",
-        description: "Order updated successfully",
-      });
+      toast.success("Order updated successfully");
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update order",
-        variant: "destructive",
-      });
+      toast.error("Failed to update order");
     }
   };
 
   const removeOrderItem = async (orderId: number, orderItemId: number) => {
     try {
-      const response = await fetch(`/api/orders/${orderId}/items/${orderItemId}`, {
-        method: "DELETE",
-      });
+      const response = await toast.promise(
+        fetch(`/api/orders/${orderId}/items/${orderItemId}`, {
+          method: "DELETE",
+        }),
+        {
+          pending: "Removing Order...",
+          success: "Item removed successfully",
+          error: "Failed to remove item",
+        }
+      );
+      // const response = await fetch(
+      //   `/api/orders/${orderId}/items/${orderItemId}`,
+      //   {
+      //     method: "DELETE",
+      //   }
+      // );
 
       if (!response.ok) throw new Error("Failed to remove order item");
 
       await fetchOrders();
-      toast({
-        title: "Success",
-        description: "Item removed from order",
-      });
+      toast.success("Item removed from order");
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to remove item",
-        variant: "destructive",
-      });
+      toast.error("Failed to remove item");
     }
   };
 
@@ -106,17 +109,17 @@ export function UserOrders() {
       acceptedTotal: 0,
       totalOrders: orders.length,
       pendingOrders: 0,
-      acceptedOrders: 0
+      acceptedOrders: 0,
     };
 
-    orders.forEach(order => {
+    orders.forEach((order) => {
       const total = Number(order.totalAmount);
       summary.totalSpent += total;
-      
-      if (order.status === 'pending') {
+
+      if (order.status === "pending") {
         summary.pendingTotal += total;
         summary.pendingOrders++;
-      } else if (['preparing', 'ready', 'delivered'].includes(order.status)) {
+      } else if (["preparing", "ready", "delivered"].includes(order.status)) {
         summary.acceptedTotal += total;
         summary.acceptedOrders++;
       }
@@ -164,27 +167,39 @@ export function UserOrders() {
                         Placed on: {new Date(order.createdAt).toLocaleString()}
                       </p>
                       <p className="text-sm mt-1">
-                        <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
-                          order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                          order.status === 'preparing' ? 'bg-blue-100 text-blue-800' :
-                          order.status === 'ready' ? 'bg-green-100 text-green-800' :
-                          order.status === 'delivered' ? 'bg-purple-100 text-purple-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
-                          {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                        <span
+                          className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
+                            order.status === "pending"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : order.status === "preparing"
+                              ? "bg-blue-100 text-blue-800"
+                              : order.status === "ready"
+                              ? "bg-green-100 text-green-800"
+                              : order.status === "delivered"
+                              ? "bg-purple-100 text-purple-800"
+                              : "bg-gray-100 text-gray-800"
+                          }`}
+                        >
+                          {order.status.charAt(0).toUpperCase() +
+                            order.status.slice(1)}
                         </span>
                       </p>
                     </div>
-                    <p className="font-semibold">Total: ${Number(order.totalAmount).toFixed(2)}</p>
+                    <p className="font-semibold">
+                      Total: ￥{Number(order.totalAmount).toFixed(2)}
+                    </p>
                   </div>
                 </div>
 
                 <div className="space-y-4">
                   {order.orderItems.map((item) => (
-                    <div key={item.id} className="flex items-start space-x-4 border-b pb-4 last:border-b-0">
+                    <div
+                      key={item.id}
+                      className="flex items-start space-x-4 border-b pb-4 last:border-b-0"
+                    >
                       {item.imageUrl && (
-                        <img 
-                          src={item.imageUrl} 
+                        <img
+                          src={item.imageUrl}
                           alt={item.name}
                           className="w-20 h-20 object-cover rounded-md flex-shrink-0"
                         />
@@ -194,27 +209,40 @@ export function UserOrders() {
                           <div>
                             <p className="font-semibold">{item.name}</p>
                             <p className="text-sm text-gray-600">
-                              ${Number(item.price).toFixed(2)} x {item.quantity} = 
-                              ${(Number(item.price) * item.quantity).toFixed(2)}
+                              ￥{Number(item.price).toFixed(2)} x{" "}
+                              {item.quantity} = ￥
+                              {(Number(item.price) * item.quantity).toFixed(2)}
                             </p>
                             {item.notes && (
-                              <p className="text-sm text-gray-500 mt-1">Note: {item.notes}</p>
+                              <p className="text-sm text-gray-500 mt-1">
+                                Note: {item.notes}
+                              </p>
                             )}
                           </div>
-                          
+
                           {order.status === "pending" && (
                             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                               <div className="flex items-center gap-2">
-                                <Label htmlFor={`quantity-${item.id}`} className="sr-only">Quantity</Label>
+                                <Label
+                                  htmlFor={`quantity-${item.id}`}
+                                  className="sr-only"
+                                >
+                                  Quantity
+                                </Label>
                                 <Input
                                   id={`quantity-${item.id}`}
                                   type="number"
                                   min="1"
                                   value={item.quantity}
                                   onChange={(e) => {
-                                    const newQuantity = parseInt(e.target.value);
+                                    const newQuantity = parseInt(
+                                      e.target.value
+                                    );
                                     if (newQuantity >= 1) {
-                                      updateOrderItem(order.id, { ...item, quantity: newQuantity });
+                                      updateOrderItem(order.id, {
+                                        ...item,
+                                        quantity: newQuantity,
+                                      });
                                     }
                                   }}
                                   className="w-20"
@@ -223,7 +251,9 @@ export function UserOrders() {
                               <Button
                                 variant="destructive"
                                 size="sm"
-                                onClick={() => removeOrderItem(order.id, item.id)}
+                                onClick={() =>
+                                  removeOrderItem(order.id, item.id)
+                                }
                               >
                                 Remove
                               </Button>
@@ -250,17 +280,29 @@ export function UserOrders() {
               <div>
                 <h4 className="font-medium text-gray-700">Orders</h4>
                 <ul className="mt-2 space-y-1">
-                  <li className="text-sm">Total Orders: {summary.totalOrders}</li>
-                  <li className="text-sm">Pending Orders: {summary.pendingOrders}</li>
-                  <li className="text-sm">Accepted Orders: {summary.acceptedOrders}</li>
+                  <li className="text-sm">
+                    Total Orders: {summary.totalOrders}
+                  </li>
+                  <li className="text-sm">
+                    Pending Orders: {summary.pendingOrders}
+                  </li>
+                  <li className="text-sm">
+                    Accepted Orders: {summary.acceptedOrders}
+                  </li>
                 </ul>
               </div>
               <div>
                 <h4 className="font-medium text-gray-700">Costs</h4>
                 <ul className="mt-2 space-y-1">
-                  <li className="text-sm">Total Spent: ${summary.totalSpent.toFixed(2)}</li>
-                  <li className="text-sm">Pending Total: ${summary.pendingTotal.toFixed(2)}</li>
-                  <li className="text-sm">Accepted Total: ${summary.acceptedTotal.toFixed(2)}</li>
+                  <li className="text-sm">
+                    Total Spent: ￥{summary.totalSpent.toFixed(2)}
+                  </li>
+                  <li className="text-sm">
+                    Pending Total: ￥{summary.pendingTotal.toFixed(2)}
+                  </li>
+                  <li className="text-sm">
+                    Accepted Total: ￥{summary.acceptedTotal.toFixed(2)}
+                  </li>
                 </ul>
               </div>
             </div>
