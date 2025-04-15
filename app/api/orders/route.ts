@@ -1,19 +1,25 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { getSession, type Session } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { orders, orderItems, menuItems, rsvps } from "@/lib/schema";
+import { orders, orderItems, menuItems, rsvps, users } from "@/lib/schema";
 import { eq, and } from "drizzle-orm";
 
 // GET /api/orders - Get orders for current user or all orders for organizer
-export async function GET() {
-  const session = await getSession() as Session;
-  if (!session) {
+export async function GET(request: Request) {
+  //GET QUERY PARAM
+  const { searchParams } = new URL(request.url);
+  const restaurant_key = searchParams.get("restaurant_key");
+
+  const is_restaurant = restaurant_key === "1234" ? true :false; // Placeholder for restaurant check
+  const session = is_restaurant ? undefined : await getSession() as Session;
+  
+  if (!session && !is_restaurant) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
-    if (session.isOrganizer) {
-      // For organizers, get all orders with their items
+    if (session?.isOrganizer || is_restaurant) {
+      // For organizers, get all orders with their items and user information
       const allOrders = await db.select({
         orderId: orders.id,
         userId: orders.userId,
@@ -21,6 +27,12 @@ export async function GET() {
         totalAmount: orders.totalAmount,
         status: orders.status,
         createdAt: orders.createdAt,
+        user: {
+          id: users.id,
+          name: users.name,
+          email: users.email,
+          wechatId: users.wechatId
+        },
         orderItem: {
           id: orderItems.id,
           quantity: orderItems.quantity,
@@ -32,6 +44,7 @@ export async function GET() {
         }
       })
       .from(orders)
+      .leftJoin(users, eq(orders.userId, users.id))
       .leftJoin(orderItems, eq(orders.id, orderItems.orderId))
       .leftJoin(menuItems, eq(orderItems.menuItemId, menuItems.id));
 
@@ -46,6 +59,7 @@ export async function GET() {
               totalAmount: Number(row.totalAmount),
               status: row.status,
               createdAt: row.createdAt,
+              user: row.user,
               orderItems: [],
             };
           }
@@ -67,6 +81,10 @@ export async function GET() {
       return NextResponse.json(formattedOrders);
     }
 
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     // For regular users, get their orders with items
     const userOrders = await db.select({
       orderId: orders.id,
@@ -75,6 +93,12 @@ export async function GET() {
       totalAmount: orders.totalAmount,
       status: orders.status,
       createdAt: orders.createdAt,
+      user: {
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        wechatId: users.wechatId
+      },
       orderItem: {
         id: orderItems.id,
         quantity: orderItems.quantity,
@@ -86,6 +110,7 @@ export async function GET() {
       }
     })
     .from(orders)
+    .leftJoin(users, eq(orders.userId, users.id))
     .leftJoin(orderItems, eq(orders.id, orderItems.orderId))
     .leftJoin(menuItems, eq(orderItems.menuItemId, menuItems.id))
     .where(eq(orders.userId, session.id));
@@ -101,6 +126,7 @@ export async function GET() {
             totalAmount: Number(row.totalAmount),
             status: row.status,
             createdAt: row.createdAt,
+            user: row.user,
             orderItems: [],
           };
         }
@@ -177,13 +203,15 @@ export async function POST(request: NextRequest) {
 
 // PUT /api/orders - Update order status (organizer only)
 export async function PUT(request: NextRequest) {
-  const session = await getSession() as Session;
-  if (!session?.isOrganizer) {
+  const body = await request.json();
+  const is_restaurant = body.restaurant_key === "1234" ? true :false; // Placeholder for restaurant check
+  const session = is_restaurant ? undefined : await getSession() as Session;
+
+  if (!session?.isOrganizer && !is_restaurant) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
-    const body = await request.json();
     const updatedOrder = await db.update(orders)
       .set({
         status: body.status,
@@ -201,6 +229,7 @@ export async function PUT(request: NextRequest) {
       totalAmount: Number(updatedOrder[0].totalAmount)
     });
   } catch (error) {
+    console.log(error)
     return NextResponse.json({ error: "Failed to update order" }, { status: 500 });
   }
 }

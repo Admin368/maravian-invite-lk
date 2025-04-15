@@ -6,11 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RestaurantDashboard } from "@/components/restaurant-dashboard";
+import {useSearchParams} from "next/navigation"
 
 export default function RestaurantPage() {
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const searchParams = useSearchParams()
+  const pwd = searchParams.get("pwd");
 
   useEffect(() => {
     // Check if already authorized
@@ -19,6 +22,19 @@ export default function RestaurantPage() {
       setIsAuthorized(true);
     }
   }, []);
+
+  useEffect(() => {
+    if(!isAuthorized){
+      if (pwd === "1234") {
+        localStorage.setItem("restaurant_auth", "true");
+        setIsAuthorized(true);
+        setError("");
+      } else if (pwd) {
+        setError("Incorrect password");
+      }
+    }
+  },[isAuthorized, pwd])
+
 
   const handleLogin = () => {
     if (password === "1234") {
@@ -57,7 +73,7 @@ export default function RestaurantPage() {
   return (
     <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Restaurant Dashboard</h1>
+        <h1 className="text-3xl font-bold text-white">Restaurant Dashboard</h1>
         <Button
           variant="outline"
           onClick={() => {
@@ -68,7 +84,7 @@ export default function RestaurantPage() {
           Logout
         </Button>
       </div>
-      <RestaurantDashboard />
+      <RestaurantDashboard restaurant_key={"1234"}/>
     </div>
   );
 }

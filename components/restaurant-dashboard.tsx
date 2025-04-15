@@ -29,6 +29,9 @@ interface Order {
   status: string;
   createdAt: string;
   orderItems: OrderItem[];
+  user: {
+    name: string
+  }
 }
 
 interface OrderSummaryItem {
@@ -37,7 +40,7 @@ interface OrderSummaryItem {
   totalAmount: number;
 }
 
-export function RestaurantDashboard() {
+export function RestaurantDashboard({restaurant_key}:{restaurant_key: string}) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [orderSummary, setOrderSummary] = useState<OrderSummaryItem[]>([]);
   const [totalRevenue, setTotalRevenue] = useState(0);
@@ -48,7 +51,7 @@ export function RestaurantDashboard() {
 
   const fetchOrders = async () => {
     try {
-      const response = await fetch("/api/orders");
+      const response = await fetch(`/api/orders?restaurant_key=${restaurant_key}`);
       const data = await response.json();
       setOrders(data);
       calculateOrderSummary(data);
@@ -89,7 +92,7 @@ export function RestaurantDashboard() {
       const response = await fetch("/api/orders", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: orderId, status }),
+        body: JSON.stringify({ id: orderId, status, restaurant_key }),
       });
 
       if (!response.ok) throw new Error("Failed to update order status");
@@ -111,14 +114,15 @@ export function RestaurantDashboard() {
   return (
     <div className="space-y-8">
       {/* Dish Summary */}
+      <p className="text-white text-center bg-gray-500 p-2">此订单摘要是实时的，当客人宣布他们将在到达时接受的订单时，信息将在刷新后更新。并不是所有的客人都声明了他们要点什么</p>
       <Card className="p-6">
-        <h3 className="text-xl font-semibold mb-4">Dish Summary</h3>
+        <h3 className="text-xl font-semibold mb-4">Dish Summary 订单摘要</h3>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Dish Name</TableHead>
-              <TableHead className="text-right">Quantity</TableHead>
-              <TableHead className="text-right">Total Amount</TableHead>
+              <TableHead>Dish Name 菜肴名称</TableHead>
+              <TableHead className="text-right">Quantity 数量</TableHead>
+              <TableHead className="text-right">Total Amount 总成本</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -130,7 +134,7 @@ export function RestaurantDashboard() {
               </TableRow>
             ))}
             <TableRow className="font-bold">
-              <TableCell>Total Revenue</TableCell>
+              <TableCell>Estimated Revenue</TableCell>
               <TableCell></TableCell>
               <TableCell className="text-right">￥{totalRevenue.toFixed(2)}</TableCell>
             </TableRow>
@@ -139,16 +143,17 @@ export function RestaurantDashboard() {
       </Card>
 
       {/* Orders List */}
+      <p className="text-white bg-gray-500 text-center p-2">{`您可以用标记订单，如果您已经确认订单`}</p>
       <Card className="p-6">
         <h3 className="text-xl font-semibold mb-4">All Orders</h3>
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Order #</TableHead>
-              <TableHead>Items</TableHead>
-              <TableHead>Notes</TableHead>
+              <TableHead>Items 菜肴名称</TableHead>
+              <TableHead>User</TableHead>
               <TableHead className="text-right">Total</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>Status 状态</TableHead>
               <TableHead>Created At</TableHead>
             </TableRow>
           </TableHeader>
@@ -166,7 +171,8 @@ export function RestaurantDashboard() {
                   </ul>
                 </TableCell>
                 <TableCell>
-                  <ul className="list-disc list-inside">
+                  {order.user.name}
+                  {/* <ul className="list-disc list-inside">
                     {order.orderItems.map((item) => (
                       item.notes && (
                         <li key={item.id} className="text-sm text-gray-600">
@@ -174,7 +180,7 @@ export function RestaurantDashboard() {
                         </li>
                       )
                     ))}
-                  </ul>
+                  </ul> */}
                 </TableCell>
                 <TableCell className="text-right">￥{order.totalAmount.toFixed(2)}</TableCell>
                 <TableCell>
@@ -183,9 +189,9 @@ export function RestaurantDashboard() {
                     onChange={(e) => updateOrderStatus(order.id, e.target.value)}
                     className="border rounded p-1"
                   >
-                    <option value="pending">Pending</option>
+                    <option value="pending">Pending 正在挂起</option>
                     <option value="preparing">Preparing</option>
-                    <option value="ready">Ready</option>
+                    <option value="ready">Accepted 已接受</option>
                     <option value="delivered">Delivered</option>
                     <option value="cancelled">Cancelled</option>
                   </select>
