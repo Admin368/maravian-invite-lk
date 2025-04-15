@@ -280,7 +280,7 @@ export function MenuOrder() {
       {orderItems.length > 0 && (
         <div className="fixed bottom-0 left-0 right-0 bg-background border-t shadow-lg p-4">
           <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
-          <p className="text-black text-center pb-2">Please Confirm your order before leaving!</p>
+          <p className="text-black text-center pb-2">Please Confirm your order before leaving this page!</p>
             <div className="container mx-auto flex items-center justify-between flex-wrap">
               <SheetTrigger asChild>
                 <Button
