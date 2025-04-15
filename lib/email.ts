@@ -141,6 +141,8 @@ export async function sendMenuLink(
       </div>
     `,
   };
+  return transporter.sendMail(mailOptions);
+
 }
 
 export async function notifyOrganizers(message: string, subject: string) {
