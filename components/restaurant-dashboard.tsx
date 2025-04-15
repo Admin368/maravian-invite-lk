@@ -2,14 +2,23 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Select } from "@/components/ui/select";
 import { toast } from "@/components/ui/use-toast";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface OrderItem {
   id: number;
   menuItemId: number;
+  name: string;
   quantity: number;
   notes: string;
+  price: number;
 }
 
 interface Order {
@@ -22,9 +31,16 @@ interface Order {
   orderItems: OrderItem[];
 }
 
+interface OrderSummaryItem {
+  name: string;
+  quantity: number;
+  totalAmount: number;
+}
+
 export function RestaurantDashboard() {
   const [orders, setOrders] = useState<Order[]>([]);
-  const [orderSummary, setOrderSummary] = useState<Record<string, number>>({});
+  const [orderSummary, setOrderSummary] = useState<OrderSummaryItem[]>([]);
+  const [totalRevenue, setTotalRevenue] = useState(0);
 
   useEffect(() => {
     fetchOrders();
@@ -46,14 +62,26 @@ export function RestaurantDashboard() {
   };
 
   const calculateOrderSummary = (orders: Order[]) => {
-    const summary: Record<string, number> = {};
+    const summary: Record<string, OrderSummaryItem> = {};
+    let total = 0;
+
     orders.forEach((order) => {
       order.orderItems.forEach((item) => {
-        const key = `${item.menuItemId}`;
-        summary[key] = (summary[key] || 0) + item.quantity;
+        if (!summary[item.name]) {
+          summary[item.name] = {
+            name: item.name,
+            quantity: 0,
+            totalAmount: 0,
+          };
+        }
+        summary[item.name].quantity += item.quantity;
+        summary[item.name].totalAmount += item.quantity * item.price;
       });
+      total += order.totalAmount;
     });
-    setOrderSummary(summary);
+
+    setOrderSummary(Object.values(summary).sort((a, b) => b.quantity - a.quantity));
+    setTotalRevenue(total);
   };
 
   const updateOrderStatus = async (orderId: number, status: string) => {
@@ -81,68 +109,93 @@ export function RestaurantDashboard() {
   };
 
   return (
-    <div className="space-y-6 text-white">
-      <h2 className="text-2xl font-bold">Restaurant Dashboard</h2>
-
-      {/* Order Summary */}
-      <Card className="p-4">
-        <h3 className="text-lg font-semibold mb-4">Order Summary</h3>
-        <div className="space-y-2">
-          {Object.entries(orderSummary).map(([menuItemId, quantity]) => (
-            <div key={menuItemId} className="flex justify-between">
-              <span>Menu Item #{menuItemId}</span>
-              <span className="font-semibold">Quantity: {quantity}</span>
-            </div>
-          ))}
-        </div>
+    <div className="space-y-8">
+      {/* Dish Summary */}
+      <Card className="p-6">
+        <h3 className="text-xl font-semibold mb-4">Dish Summary</h3>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Dish Name</TableHead>
+              <TableHead className="text-right">Quantity</TableHead>
+              <TableHead className="text-right">Total Amount</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {orderSummary.map((item) => (
+              <TableRow key={item.name}>
+                <TableCell>{item.name}</TableCell>
+                <TableCell className="text-right">{item.quantity}</TableCell>
+                <TableCell className="text-right">￥{item.totalAmount.toFixed(2)}</TableCell>
+              </TableRow>
+            ))}
+            <TableRow className="font-bold">
+              <TableCell>Total Revenue</TableCell>
+              <TableCell></TableCell>
+              <TableCell className="text-right">￥{totalRevenue.toFixed(2)}</TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
       </Card>
 
-      {/* Order List */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold">All Orders</h3>
-        {orders.map((order) => (
-          <Card key={order.id} className="p-4">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="font-semibold">Order #{order.id}</p>
-                <p className="text-sm text-gray-600">
-                  RSVP #{order.rsvpId} - User #{order.userId}
-                </p>
-                <p>Total: ${Number(order.totalAmount).toFixed(2)}</p>
-                <p>Created: {new Date(order.createdAt).toLocaleString()}</p>
-              </div>
-              <select
-                value={order.status}
-                onChange={(e) => updateOrderStatus(order.id, e.target.value)}
-                className="border p-1 rounded"
-              >
-                <option value="pending">Pending</option>
-                <option value="preparing">Preparing</option>
-                <option value="ready">Ready</option>
-                <option value="delivered">Delivered</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
-            </div>
-            <div className="mt-4">
-              <h4 className="font-semibold mb-2">Items:</h4>
-              <ul className="space-y-2">
-                {order.orderItems.map((item) => (
-                  <li key={item.id} className="flex justify-between">
-                    <span>
-                      Menu Item #{item.menuItemId} x{item.quantity}
-                    </span>
-                    {item.notes && (
-                      <span className="text-sm text-gray-600">
-                        Note: {item.notes}
-                      </span>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </Card>
-        ))}
-      </div>
+      {/* Orders List */}
+      <Card className="p-6">
+        <h3 className="text-xl font-semibold mb-4">All Orders</h3>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Order #</TableHead>
+              <TableHead>Items</TableHead>
+              <TableHead>Notes</TableHead>
+              <TableHead className="text-right">Total</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Created At</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {orders.map((order) => (
+              <TableRow key={order.id}>
+                <TableCell>#{order.id}</TableCell>
+                <TableCell>
+                  <ul className="list-disc list-inside">
+                    {order.orderItems.map((item) => (
+                      <li key={item.id}>
+                        {item.name} x{item.quantity}
+                      </li>
+                    ))}
+                  </ul>
+                </TableCell>
+                <TableCell>
+                  <ul className="list-disc list-inside">
+                    {order.orderItems.map((item) => (
+                      item.notes && (
+                        <li key={item.id} className="text-sm text-gray-600">
+                          {item.notes}
+                        </li>
+                      )
+                    ))}
+                  </ul>
+                </TableCell>
+                <TableCell className="text-right">￥{order.totalAmount.toFixed(2)}</TableCell>
+                <TableCell>
+                  <select
+                    value={order.status}
+                    onChange={(e) => updateOrderStatus(order.id, e.target.value)}
+                    className="border rounded p-1"
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="preparing">Preparing</option>
+                    <option value="ready">Ready</option>
+                    <option value="delivered">Delivered</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
+                </TableCell>
+                <TableCell>{new Date(order.createdAt).toLocaleString()}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Card>
     </div>
   );
 }

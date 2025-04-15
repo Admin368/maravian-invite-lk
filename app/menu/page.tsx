@@ -21,18 +21,29 @@ export default async function MenuPage() {
           Return to Invitation
         </Button>
       </Link>
-      {session.isOrganizer ? (
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold">Menu Management</h1>
-            <Button asChild>
-              <Link href="/menu/orders">View Orders</Link>
-            </Button>
-          </div>
-          <MenuManagement />
-        </div>
-      ) : (
-        <div className="space-y-8">
+      <div className="space-y-8">
+        {session.isOrganizer ? (
+          <>
+            <div className="flex justify-between items-center">
+              <h1 className="text-3xl font-bold">Menu</h1>
+              <Button asChild>
+                <Link href="/menu/orders">View All Orders</Link>
+              </Button>
+            </div>
+            <Tabs defaultValue="manage" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="manage">Manage Menu</TabsTrigger>
+                <TabsTrigger value="order">Place Order</TabsTrigger>
+              </TabsList>
+              <TabsContent value="manage">
+                <MenuManagement />
+              </TabsContent>
+              <TabsContent value="order">
+                <MenuOrder />
+              </TabsContent>
+            </Tabs>
+          </>
+        ) : (
           <Tabs defaultValue="menu" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="menu">Menu</TabsTrigger>
@@ -45,8 +56,8 @@ export default async function MenuPage() {
               <UserOrders />
             </TabsContent>
           </Tabs>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

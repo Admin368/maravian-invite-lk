@@ -27,6 +27,7 @@ export function MenuManagement() {
   const [items, setItems] = useState<MenuItem[]>([]);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<'name' | 'price'>('name');
   const [newItem, setNewItem] = useState({
     name: "",
     description: "",
@@ -38,11 +39,22 @@ export function MenuManagement() {
     fetchMenuItems();
   }, []);
 
+  const sortItems = (items: MenuItem[]) => {
+    return items.sort((a, b) => {
+      if (sortBy === 'name') {
+        return a.name.localeCompare(b.name);
+      } else {
+        return a.price - b.price;
+      }
+    });
+  };
+
   const fetchMenuItems = async () => {
     try {
       const response = await fetch("/api/menu");
       const data = await response.json();
-      setItems(data);
+      const sortedItems = sortItems([...data]);
+      setItems(sortedItems);
     } catch (error) {
       toast({
         title: "Error",
@@ -51,6 +63,10 @@ export function MenuManagement() {
       });
     }
   };
+
+  useEffect(() => {
+    setItems(prevItems => sortItems([...prevItems]));
+  }, [sortBy]);
 
   const handleAddItem = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -109,7 +125,21 @@ export function MenuManagement() {
   return (
     <div className="space-y-6 text-white">
       <Dialog>
-        <h2 className="text-2xl font-bold">Menu Management</h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-bold">Menu Management</h2>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="sort">Sort by:</Label>
+            <select
+              id="sort"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as 'name' | 'price')}
+              className="rounded-md border bg-background px-3 py-2 text-black"
+            >
+              <option value="name text-red" className="color-red" style={{color: "black"}}>Name</option>
+              <option value="price" className="color-red">Price</option>
+            </select>
+          </div>
+        </div>
         
         {/* Add new item form */}
         <Card className="p-4">
@@ -224,13 +254,22 @@ export function MenuManagement() {
             </Card>
           ))}
         </div>
-        <DialogContent className="max-w-screen-lg w-full h-full flex items-center justify-center p-0 bg-black/90">
-          <img
-            src={selectedImage || ''}
-            alt="Full size"
-            className="max-h-[90vh] max-w-[90vw] object-contain"
-            onClick={(e) => e.stopPropagation()}
-          />
+        <DialogContent className="max-w-none w-screen h-screen p-0 bg-black">
+          <div className="relative w-full h-full flex items-center justify-center">
+            <Button 
+              variant="ghost" 
+              className="absolute top-4 right-4 text-white hover:bg-white/20" 
+              onClick={() => setSelectedImage(null)}
+            >
+              ×
+            </Button>
+            <img
+              src={selectedImage || ''}
+              alt="Full size"
+              className="max-h-screen max-w-screen object-contain"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
         </DialogContent>
       </Dialog>
     </div>
