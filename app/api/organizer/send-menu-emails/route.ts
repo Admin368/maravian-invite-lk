@@ -1,11 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
-import {
-  getAllGuests,
-  createInvitation,
-  sendMagicLink,
-  updateEmailSentStatus,
-} from "@/lib/db";
+import { db } from "@/lib/db";
+import { rsvps, users } from "@/lib/schema";
+import { eq } from "drizzle-orm";
+import { sendMagicLink, sendMenuLink } from "@/lib/email";
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,29 +13,41 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // const guests = await getAllGuests();
-    const guests:any[] = [];
+    // Get all attending guests with their user information
+    const attendingGuests = await db
+      .select({
+        id: rsvps.id,
+        email: users.email,
+        name: users.name,
+      })
+      .from(rsvps)
+      .innerJoin(users, eq(rsvps.userId, users.id))
+      .where(eq(rsvps.status, "attending"));
 
-    const pendingGuests = guests.filter(
-      (guest) => !guest.status || guest.status === "pending"
-    );
-
-    for (const guest of pendingGuests) {
-      // Create invitation with token
-      const invitation = await createInvitation(guest.id);
-
-      // Send magic link email
-      await sendMagicLink(guest.email, invitation.token, false, guest.name);
-
-      // Update email sent status
-      await updateEmailSentStatus(guest.id, true);
+    // Send emails to all attending guests
+    for (const guest of attendingGuests) {
+      try {
+        // Send magic link with menu redirect
+        await sendMenuLink(
+          guest.email,
+          guest.id.toString(),
+          false,
+          guest.name,
+          "/menu"
+        );
+      } catch (error) {
+        console.error(`Failed to send menu email to ${guest.email}:`, error);
+      }
     }
 
-    return NextResponse.json({ success: true }, { status: 200 });
+    return NextResponse.json({ 
+      success: true,
+      count: attendingGuests.length 
+    });
   } catch (error) {
-    console.error("Send pending invites error:", error);
+    console.error("Send menu emails error:", error);
     return NextResponse.json(
-      { error: "Failed to send invites" },
+      { error: "Failed to send menu emails" },
       { status: 500 }
     );
   }

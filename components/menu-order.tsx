@@ -46,10 +46,21 @@ export function MenuOrder() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<"name" | "price">("name");
 
   useEffect(() => {
     fetchMenuItems();
   }, []);
+
+  const sortItems = (items: MenuItem[]) => {
+    return items.sort((a, b) => {
+      if (sortBy === "name") {
+        return a.name.localeCompare(b.name);
+      } else {
+        return a.price - b.price;
+      }
+    });
+  };
 
   const fetchMenuItems = async () => {
     setIsLoading(true);
@@ -60,7 +71,10 @@ export function MenuOrder() {
         error: "Failed to load menu items",
       });
       const data = await response.json();
-      setMenuItems(data.filter((item: MenuItem) => item.isAvailable));
+      // Filter available items and sort them
+      const availableItems = data.filter((item: MenuItem) => item.isAvailable);
+      const sortedItems = sortItems(availableItems);
+      setMenuItems(sortedItems);
     } catch (error) {
       setError("Failed to fetch menu items");
       toast.error("Failed to fetch menu items");
@@ -68,6 +82,11 @@ export function MenuOrder() {
       setIsLoading(false);
     }
   };
+
+  // Re-sort items when sort method changes
+  useEffect(() => {
+    setMenuItems((prevItems) => sortItems([...prevItems]));
+  }, [sortBy]);
 
   const addToOrder = (item: MenuItem) => {
     const existingItem = orderItems.find((i) => i.menuItemId === item.id);
@@ -181,6 +200,20 @@ export function MenuOrder() {
   }
   return (
     <div className="relative pb-24">
+      <div className="mb-4 flex justify-end">
+        <div className="flex items-center gap-2">
+          <Label htmlFor="sort">Sort by:</Label>
+          <select
+            id="sort"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as "name" | "price")}
+            className="rounded-md border bg-background px-3 py-2 text-black"
+          >
+            <option value="name">Name</option>
+            <option value="price">Price</option>
+          </select>
+        </div>
+      </div>
       <Dialog>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {menuItems.map((item) => (
@@ -224,13 +257,22 @@ export function MenuOrder() {
             </Card>
           ))}
         </div>
-        <DialogContent className="max-w-screen-lg w-full h-full flex items-center justify-center p-0 bg-black/90">
-          <img
-            src={selectedImage || ""}
-            alt="Full size"
-            className="max-h-[90vh] max-w-[90vw] object-contain"
-            onClick={(e) => e.stopPropagation()}
-          />
+        <DialogContent className="max-w-none w-screen h-screen p-0 bg-black text-white">
+          <div className="relative w-full h-full flex items-center justify-center">
+            {/* <Button 
+              variant="ghost" 
+              className="absolute top-4 right-4 text-white hover:bg-white/20" 
+              onClick={() => setSelectedImage(null)}
+            >
+              ×
+            </Button> */}
+            <img
+              src={selectedImage || ""}
+              alt="Full size"
+              className="max-h-screen max-w-screen object-contain"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
         </DialogContent>
       </Dialog>
 

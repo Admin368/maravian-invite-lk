@@ -170,6 +170,7 @@ export async function POST(request: NextRequest) {
       totalAmount: Number(order.totalAmount)
     });
   } catch (error) {
+    console.error(error);
     return NextResponse.json({ error: "Failed to create order" }, { status: 500 });
   }
 }

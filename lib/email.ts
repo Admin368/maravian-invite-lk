@@ -104,6 +104,44 @@ export async function sendMagicLink(
   // Actually send the email in production
   return transporter.sendMail(mailOptions);
 }
+export async function sendMenuLink(
+  email: string,
+  token: string,
+  isOrganizer = false,
+  name: string,
+  redirect?: string
+) {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const verifyUrl = `${baseUrl}/invitation/verify?token=${token}${redirect ? `&redirect=${redirect}` : ""}`;
+
+  const mailOptions = {
+    from: `"Layla & Kondwani Celebration" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
+    to: email,
+    subject:"Menu Selection Request",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #D4AF37; text-align: center;">
+          ${redirect === "/menu" ? "Menu Selection Required" : "Welcome"}
+        </h2>
+        <p>Dear ${name},</p>
+        ${
+          redirect === "/menu"
+            ? `
+              <p><strong>Urgent:</strong> The restaurant would like to know your meal preferences ahead of time.</p>
+              <p>Please click the link below to select your meal options. This will help the resturant ensure everything is prepared ahead of time.</p>
+              <p>Note: Each guest will be responsible for paying for their own meal.</p>
+              `
+            : `<p>You've been invited to celebrate with us!</p>`
+        }
+        <p style="text-align: center; margin-top: 30px;">
+          <a href="${verifyUrl}" style="display: inline-block; padding: 10px 20px; background-color: #D4AF37; color: #fff; text-decoration: none; border-radius: 4px;">
+            ${redirect === "/menu" ? "Select Your Meal" : "View Invitation"}
+          </a>
+        </p>
+      </div>
+    `,
+  };
+}
 
 export async function notifyOrganizers(message: string, subject: string) {
   // In preview mode, just log the notification

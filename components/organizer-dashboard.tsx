@@ -179,7 +179,7 @@ export function OrganizerDashboard({ guests, stats }: OrganizerDashboardProps) {
   async function sendMenuEmail() {
     setIsLoading((prev) => ({ ...prev, menu: true }));
     try {
-      const response = await fetch("/api/organizer/send-menu-email", {
+      const response = await fetch("/api/organizer/send-menu-emails", {
         method: "POST",
       });
 
@@ -188,7 +188,8 @@ export function OrganizerDashboard({ guests, stats }: OrganizerDashboardProps) {
         throw new Error(data.error || "Failed to send menu email");
       }
 
-      toast.success("Menu email sent to all attending guests");
+      const result = await response.json();
+      toast.success(`Menu email sent to ${result.count} attending guests`);
     } catch (error) {
       console.error("Send menu email error:", error);
       toast.error(
@@ -482,7 +483,7 @@ export function OrganizerDashboard({ guests, stats }: OrganizerDashboardProps) {
               Send to Pending
             </Button>
             <Button
-              onClick={()=>{
+              onClick={() => {
                 router.push("/menu/orders");
               }}
               variant="outline"
@@ -491,11 +492,10 @@ export function OrganizerDashboard({ guests, stats }: OrganizerDashboardProps) {
             </Button>
             <Button
               onClick={sendMenuEmail}
-              // disabled={isLoading.pending}
-              disabled={true}
+              disabled={isLoading.menu}
               variant="outline"
             >
-              {isLoading.pending ? (
+              {isLoading.menu ? (
                 <Loading size="lg" />
               ) : (
                 <Mail className="h-4 w-4 mr-2" />
