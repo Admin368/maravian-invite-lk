@@ -12,12 +12,16 @@ function VerifyContent() {
     const verifyToken = async () => {
       try {
         const token = searchParams.get("token");
+        const redirect = searchParams.get("redirect");
+        const redirectUrl = redirect ? `&redirect=${redirect}` : "";
         if (!token) {
           setError("No verification token provided");
           return;
         }
 
-        const response = await fetch(`/api/organizer/verify?token=${token}`);
+        const response = await fetch(
+          `/api/organizer/verify?token=${token}${redirectUrl}`
+        );
         const data = await response.json();
 
         if (!response.ok) {

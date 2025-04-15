@@ -25,6 +25,7 @@ type InvitationDetailsProps = {
     plus_one: boolean;
     plus_one_name: string | null;
     joined_wechat?: boolean;
+    has_made_order?: boolean;
   };
 };
 
@@ -158,6 +159,24 @@ export function InvitationDetails({ user, rsvp }: InvitationDetailsProps) {
             {joinedWeChat && (
               <p className="text-green-600 text-sm mt-2">
                 ✓ You've joined the WeChat group
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-8 border-t pt-6 pb-4">
+          <div className="text-center">
+            <h3 className="font-medium mb-2">Menu Pre-order</h3>
+            <p>
+              Since we are alot of guests coming, the resturant has request us
+              to declare our pre-orders so that they prepare well.
+            </p>
+            <Link href={"/menu"}>
+              <Button className="my-2">View Menu</Button>
+            </Link>
+            {rsvp.has_made_order && (
+              <p className="text-green-600 text-sm mt-2">
+                ✓ You've jplaced your preorder
               </p>
             )}
           </div>

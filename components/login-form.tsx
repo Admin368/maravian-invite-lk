@@ -32,7 +32,7 @@ const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
 });
 
-export function LoginForm() {
+export function LoginForm({ redirect }: { redirect?: string | null }) {
   const [isLoading, setIsLoading] = useState(false);
   const [magicLink, setMagicLink] = useState<string | null>(null);
   const [sentEmail, setSentEmail] = useState<string | null>(null);
@@ -53,7 +53,7 @@ export function LoginForm() {
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
+        body: JSON.stringify({ ...values, redirect }),
       });
 
       const data = await response.json();
