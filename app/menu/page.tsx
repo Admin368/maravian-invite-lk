@@ -11,7 +11,7 @@ export default async function MenuPage() {
   const session = (await getSession()) as Session;
 
   if (!session) {
-    redirect("/");
+    redirect("/?redirect=/menu");
   }
 
   return (

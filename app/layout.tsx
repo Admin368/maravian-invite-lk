@@ -30,7 +30,7 @@ export default function RootLayout({
         border: "10px solid green",
       }}
     >
-      <body className={inter.className}>
+      <body className={inter.className + "h-min-screen"}>
         <ThemeProvider
           attribute="class"
           defaultTheme="light"
@@ -47,7 +47,11 @@ export default function RootLayout({
       <ImageSlideshow />
       <footer>
         <div className="container mx-auto py-6 text-center">
-          <a href="https://maravian.com" target="_blank" className="text-center text-gray-500">
+          <a
+            href="https://maravian.com"
+            target="_blank"
+            className="text-center text-gray-500"
+          >
             &copy; {new Date().getFullYear()} Maravian
           </a>
         </div>

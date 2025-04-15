@@ -19,6 +19,7 @@ export default function VerifyPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
+  const redirect = searchParams.get("redirect");
 
   useEffect(() => {
     async function verifyToken() {
@@ -29,7 +30,10 @@ export default function VerifyPage() {
       }
 
       try {
-        const response = await fetch(`/api/auth/verify?token=${token}`);
+        const redirectUrl = redirect ? `&redirect=${redirect}` : "";
+        const response = await fetch(
+          `/api/auth/verify?token=${token}${redirectUrl}`
+        );
         const data = await response.json();
 
         if (!response.ok) {

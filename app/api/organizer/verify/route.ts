@@ -6,6 +6,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const token = searchParams.get("token");
+    const redirect = searchParams.get("redirect");
 
     if (!token) {
       return NextResponse.json({ error: "Token is required" }, { status: 400 });
@@ -36,7 +37,7 @@ export async function GET(request: NextRequest) {
     await createSession(invitation.email);
 
     return NextResponse.json(
-      { success: true, redirectUrl: "/organizer" },
+      { success: true, redirectUrl: redirect ?? "/organizer" },
       { status: 200 }
     );
   } catch (error) {

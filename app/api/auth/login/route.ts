@@ -8,7 +8,7 @@ const isPreviewEnvironment =
 
 export async function POST(request: NextRequest) {
   try {
-    const { email } = await request.json();
+    const { email, redirect } = await request.json();
 
     if (!email) {
       return NextResponse.json({ error: "Email is required" }, { status: 400 });
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
         {
           success: true,
           message:
-            "If your email is in our system, you will receive a magic link",
+            "If your email is in our system, you will receive an access link",
         },
         { status: 200 }
       );
@@ -50,7 +50,8 @@ export async function POST(request: NextRequest) {
       email,
       invitation.token,
       user.is_organizer,
-      user.name
+      user.name,
+      redirect
     );
 
     // In preview mode, return the magic link URL directly

@@ -2,8 +2,15 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { LoginForm } from "@/components/login-form";
 
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ redirect: string }>;
+}) {
   const session = await getSession();
+  // get search param of redirect using nextjs api
+  const searchparams = await searchParams;
+  const redirect_to = searchparams.redirect;
 
   if (session) {
     if (session.isOrganizer) {
@@ -19,7 +26,7 @@ export default async function Home() {
         <h1 className="text-3xl font-bold text-center text-gold mb-6">
           Layla & Kondwani Engagement Celebration
         </h1>
-        <LoginForm />
+        <LoginForm redirect={redirect_to} />
       </div>
     </main>
   );

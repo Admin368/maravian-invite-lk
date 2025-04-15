@@ -33,12 +33,14 @@ export async function sendMagicLink(
   email: string,
   token: string,
   isOrganizer = false,
-  name: string
+  name: string,
+  redirect?: string
 ) {
+  const redirectUrl = redirect ? `&redirect=${redirect}` : "";
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
   const magicLinkUrl = `${baseUrl}/${
     isOrganizer ? "organizer" : "invitation"
-  }/verify?token=${token}`;
+  }/verify?token=${token}${redirectUrl}`;
 
   const mailOptions = {
     from: `"Layla & Kondwani" <${
