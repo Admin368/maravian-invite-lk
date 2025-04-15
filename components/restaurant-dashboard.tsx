@@ -108,7 +108,7 @@ export function RestaurantDashboard() {
                 <p className="text-sm text-gray-600">
                   RSVP #{order.rsvpId} - User #{order.userId}
                 </p>
-                <p>Total: ${order.totalAmount.toFixed(2)}</p>
+                <p>Total: ${Number(order.totalAmount).toFixed(2)}</p>
                 <p>Created: {new Date(order.createdAt).toLocaleString()}</p>
               </div>
               <select

@@ -8,7 +8,12 @@ import { eq } from "drizzle-orm";
 export async function GET() {
   try {
     const items = await db.select().from(menuItems);
-    return NextResponse.json(items);
+    // Convert price strings to numbers
+    const formattedItems = items.map(item => ({
+      ...item,
+      price: Number(item.price)
+    }));
+    return NextResponse.json(formattedItems);
   } catch (error) {
     return NextResponse.json({ error: "Failed to fetch menu items" }, { status: 500 });
   }
@@ -31,7 +36,10 @@ export async function POST(request: NextRequest) {
       isAvailable: true,
     }).returning();
 
-    return NextResponse.json(newItem[0]);
+    return NextResponse.json({
+      ...newItem[0],
+      price: Number(newItem[0].price)
+    });
   } catch (error) {
     return NextResponse.json({ error: "Failed to create menu item" }, { status: 500 });
   }
@@ -62,7 +70,10 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "Menu item not found" }, { status: 404 });
     }
 
-    return NextResponse.json(updatedItem[0]);
+    return NextResponse.json({
+      ...updatedItem[0],
+      price: Number(updatedItem[0].price)
+    });
   } catch (error) {
     return NextResponse.json({ error: "Failed to update menu item" }, { status: 500 });
   }

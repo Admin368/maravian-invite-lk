@@ -45,6 +45,18 @@ export default function RootLayout({
         </ThemeProvider>
       </body>
       <ImageSlideshow />
+      <footer>
+        <div className="container mx-auto py-6 text-center">
+          <a href="https://maravian.com" target="_blank" className="text-center text-gray-500">
+            &copy; {new Date().getFullYear()} Maravian
+          </a>
+        </div>
+        {/* <div className="fixed bottom-0 left-0 right-0 bg-gray-800 text-white p-4">
+          <p className="text-center">
+            This is a private event. Unauthorized access is prohibited.
+          </p>
+        </div> */}
+      </footer>
     </html>
   );
 }

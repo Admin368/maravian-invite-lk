@@ -6,6 +6,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/use-toast";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Loading } from "./ui/loading";
 
 interface MenuItem {
   id: number;
@@ -27,22 +41,30 @@ interface OrderItem {
 export function MenuOrder() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchMenuItems();
   }, []);
 
   const fetchMenuItems = async () => {
+    setIsLoading(true);
     try {
       const response = await fetch("/api/menu");
       const data = await response.json();
       setMenuItems(data.filter((item: MenuItem) => item.isAvailable));
     } catch (error) {
+      setError("Failed to fetch menu items");
       toast({
         title: "Error",
         description: "Failed to fetch menu items",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -51,9 +73,7 @@ export function MenuOrder() {
     if (existingItem) {
       setOrderItems(
         orderItems.map((i) =>
-          i.menuItemId === item.id
-            ? { ...i, quantity: i.quantity + 1 }
-            : i
+          i.menuItemId === item.id ? { ...i, quantity: i.quantity + 1 } : i
         )
       );
     } else {
@@ -112,118 +132,239 @@ export function MenuOrder() {
       if (!response.ok) throw new Error("Failed to place order");
 
       setOrderItems([]);
+      setIsCartOpen(false);
       toast({
-        title: "Success",
-        description: "Order placed successfully",
+        title: "Order Placed Successfully! 🎉",
+        description: "Your order has been received and is being processed.",
+        variant: "default",
       });
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to place order",
+        title: "Error Placing Order",
+        description:
+          "There was a problem placing your order. Please try again.",
         variant: "destructive",
       });
     }
   };
 
+  const decreaseQuantity = (item: MenuItem) => {
+    const existingItem = orderItems.find((i) => i.menuItemId === item.id);
+    if (existingItem) {
+      if (existingItem.quantity > 1) {
+        setOrderItems(
+          orderItems.map((i) =>
+            i.menuItemId === item.id ? { ...i, quantity: i.quantity - 1 } : i
+          )
+        );
+      } else {
+        removeFromOrder(item.id);
+      }
+    }
+  };
+
+  const getItemQuantity = (itemId: number) => {
+    const item = orderItems.find((i) => i.menuItemId === itemId);
+    return item ? item.quantity : 0;
+  };
+  if(error) {
+    <div className="flex-1 h-full flex justify-center align-middle">
+        <pre className="text-red">There was an error, please reload</pre>
+      </div>
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex-1 h-full flex justify-center align-middle">
+        <Loading />
+      </div>
+    );
+  }
   return (
-    <div className="grid gap-6 md:grid-cols-2 text-white">
-      {/* Menu Items */}
-      <div className="space-y-4">
-        <h2 className="text-2xl font-bold">Menu</h2>
-        <div className="grid gap-4 md:grid-cols-2">
+    <div className="relative pb-24">
+      <Dialog>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {menuItems.map((item) => (
             <Card key={item.id} className="p-4">
               {item.imageUrl && (
-                <img
-                  src={item.imageUrl}
-                  alt={item.name}
-                  className="w-full h-48 object-cover rounded-md mb-4"
-                />
+                <DialogTrigger asChild>
+                  <img
+                    src={item.imageUrl}
+                    alt={item.name}
+                    className="w-full h-48 object-cover rounded-md mb-4 cursor-pointer hover:opacity-90 transition-opacity"
+                    onClick={() => setSelectedImage(item.imageUrl)}
+                  />
+                </DialogTrigger>
               )}
               <h3 className="font-semibold">{item.name}</h3>
               <p className="text-sm text-gray-600">{item.description}</p>
               <p className="font-semibold mt-2">${item.price.toFixed(2)}</p>
-              <Button
-                onClick={() => addToOrder(item)}
-                className="w-full mt-2"
-              >
-                Add to Order
-              </Button>
+
+              <div className="flex items-center justify-between mt-4 border-t pt-4">
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => decreaseQuantity(item)}
+                    disabled={getItemQuantity(item.id) === 0}
+                  >
+                    -
+                  </Button>
+                  <span className="w-8 text-center">
+                    {getItemQuantity(item.id)}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => addToOrder(item)}
+                  >
+                    +
+                  </Button>
+                </div>
+              </div>
             </Card>
           ))}
         </div>
-      </div>
+        <DialogContent className="max-w-screen-lg w-full h-full flex items-center justify-center p-0 bg-black/90">
+          <img
+            src={selectedImage || ""}
+            alt="Full size"
+            className="max-h-[90vh] max-w-[90vw] object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </DialogContent>
+      </Dialog>
 
-      {/* Order Summary */}
-      <div className="space-y-4">
-        <h2 className="text-2xl font-bold">Your Order</h2>
-        {orderItems.length === 0 ? (
-          <p>No items in your order yet.</p>
-        ) : (
-          <>
-            <div className="space-y-4">
-              {orderItems.map((item) => (
-                <Card key={item.menuItemId} className="p-4">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-semibold">{item.name}</h3>
-                      <p className="text-sm">
-                        ${(item.price * item.quantity).toFixed(2)}
-                      </p>
+      {/* Floating Cart */}
+      {orderItems.length > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 bg-background border-t shadow-lg p-4">
+          <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
+            <div className="container mx-auto flex items-center justify-between">
+              <SheetTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="flex items-center gap-2 text-black"
+                >
+                  Cart •{" "}
+                  {orderItems.reduce((sum, item) => sum + item.quantity, 0)}{" "}
+                  items
+                </Button>
+              </SheetTrigger>
+              <div className="flex items-center gap-4">
+                <p className="text-lg font-semibold">
+                  Total: ${calculateTotal().toFixed(2)}
+                </p>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button size="lg">Place Order</Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Confirm Order</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to place this order? The total
+                        amount is ${calculateTotal().toFixed(2)}.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handlePlaceOrder}>
+                        Confirm Order
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            </div>
+
+            <SheetContent side="bottom" className="h-[80vh]">
+              <div className="space-y-4 mt-4">
+                <h2 className="text-2xl font-bold">Cart</h2>
+                {orderItems.map((item) => (
+                  <Card key={item.menuItemId} className="p-4">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-semibold">{item.name}</h3>
+                        <p className="text-sm">
+                          ${(item.price * item.quantity).toFixed(2)}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() =>
+                            updateQuantity(item.menuItemId, item.quantity - 1)
+                          }
+                          disabled={item.quantity <= 1}
+                        >
+                          -
+                        </Button>
+                        <span className="w-8 text-center">{item.quantity}</span>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() =>
+                            updateQuantity(item.menuItemId, item.quantity + 1)
+                          }
+                        >
+                          +
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="icon"
+                          onClick={() => removeFromOrder(item.menuItemId)}
+                        >
+                          ×
+                        </Button>
+                      </div>
                     </div>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => removeFromOrder(item.menuItemId)}
-                    >
-                      Remove
-                    </Button>
-                  </div>
-                  <div className="mt-2 space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <Label>Quantity:</Label>
-                      <Input
-                        type="number"
-                        min="1"
-                        value={item.quantity}
-                        onChange={(e) =>
-                          updateQuantity(
-                            item.menuItemId,
-                            parseInt(e.target.value)
-                          )
-                        }
-                        className="w-20"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label>Special requests:</Label>
+                    <div className="mt-2">
                       <Textarea
                         value={item.notes}
                         onChange={(e) =>
                           updateNotes(item.menuItemId, e.target.value)
                         }
                         placeholder="Any special requests?"
+                        className="mt-2"
                       />
                     </div>
+                  </Card>
+                ))}
+                <div className="border-t pt-4 mt-auto">
+                  <div className="flex justify-between items-center mb-4">
+                    <p className="text-lg font-semibold">
+                      Total: ${calculateTotal().toFixed(2)}
+                    </p>
                   </div>
-                </Card>
-              ))}
-            </div>
-            <div className="border-t pt-4">
-              <p className="text-lg font-semibold">
-                Total: ${calculateTotal().toFixed(2)}
-              </p>
-              <Button
-                onClick={handlePlaceOrder}
-                className="w-full mt-4"
-                size="lg"
-              >
-                Place Order
-              </Button>
-            </div>
-          </>
-        )}
-      </div>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button className="w-full" size="lg">
+                        Place Order
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Confirm Order</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to place this order? The total
+                          amount is ${calculateTotal().toFixed(2)}.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handlePlaceOrder}>
+                          Confirm Order
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
+      )}
     </div>
   );
 }

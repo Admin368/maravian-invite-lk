@@ -1,8 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { getSession, type Session } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { orders, orderItems, rsvps } from "@/lib/schema";
-import { eq } from "drizzle-orm";
+import { orders, orderItems, menuItems, rsvps } from "@/lib/schema";
+import { eq, and } from "drizzle-orm";
 
 // GET /api/orders - Get orders for current user or all orders for organizer
 export async function GET() {
@@ -13,15 +13,113 @@ export async function GET() {
 
   try {
     if (session.isOrganizer) {
-      const allOrders = await db.select().from(orders).innerJoin(orderItems, eq(orders.id, orderItems.orderId));
-      return NextResponse.json(allOrders);
+      // For organizers, get all orders with their items
+      const allOrders = await db.select({
+        orderId: orders.id,
+        userId: orders.userId,
+        rsvpId: orders.rsvpId,
+        totalAmount: orders.totalAmount,
+        status: orders.status,
+        createdAt: orders.createdAt,
+        orderItem: {
+          id: orderItems.id,
+          quantity: orderItems.quantity,
+          notes: orderItems.notes,
+          menuItemId: menuItems.id,
+          name: menuItems.name,
+          price: menuItems.price,
+          imageUrl: menuItems.imageUrl,
+        }
+      })
+      .from(orders)
+      .leftJoin(orderItems, eq(orders.id, orderItems.orderId))
+      .leftJoin(menuItems, eq(orderItems.menuItemId, menuItems.id));
+
+      // Group items by order
+      const formattedOrders = Object.values(
+        allOrders.reduce((acc: any, row) => {
+          if (!acc[row.orderId]) {
+            acc[row.orderId] = {
+              id: row.orderId,
+              userId: row.userId,
+              rsvpId: row.rsvpId,
+              totalAmount: Number(row.totalAmount),
+              status: row.status,
+              createdAt: row.createdAt,
+              orderItems: [],
+            };
+          }
+          if (row.orderItem?.id) {
+            acc[row.orderId].orderItems.push({
+              id: row.orderItem.id,
+              menuItemId: row.orderItem.menuItemId,
+              name: row.orderItem.name,
+              price: Number(row.orderItem.price),
+              quantity: row.orderItem.quantity,
+              notes: row.orderItem.notes,
+              imageUrl: row.orderItem.imageUrl,
+            });
+          }
+          return acc;
+        }, {})
+      );
+
+      return NextResponse.json(formattedOrders);
     }
 
-    const userOrders = await db.select()
-      .from(orders)
-      .where(eq(orders.userId, session.id));
-    
-    return NextResponse.json(userOrders);
+    // For regular users, get their orders with items
+    const userOrders = await db.select({
+      orderId: orders.id,
+      userId: orders.userId,
+      rsvpId: orders.rsvpId,
+      totalAmount: orders.totalAmount,
+      status: orders.status,
+      createdAt: orders.createdAt,
+      orderItem: {
+        id: orderItems.id,
+        quantity: orderItems.quantity,
+        notes: orderItems.notes,
+        menuItemId: menuItems.id,
+        name: menuItems.name,
+        price: menuItems.price,
+        imageUrl: menuItems.imageUrl,
+      }
+    })
+    .from(orders)
+    .leftJoin(orderItems, eq(orders.id, orderItems.orderId))
+    .leftJoin(menuItems, eq(orderItems.menuItemId, menuItems.id))
+    .where(eq(orders.userId, session.id));
+
+    // Group items by order
+    const formattedOrders = Object.values(
+      userOrders.reduce((acc: any, row) => {
+        if (!acc[row.orderId]) {
+          acc[row.orderId] = {
+            id: row.orderId,
+            userId: row.userId,
+            rsvpId: row.rsvpId,
+            totalAmount: Number(row.totalAmount),
+            status: row.status,
+            createdAt: row.createdAt,
+            orderItems: [],
+          };
+        }
+        if (row.orderItem?.id) {
+          acc[row.orderId].orderItems.push({
+            id: row.orderItem.id,
+            menuItemId: row.orderItem.menuItemId,
+            name: row.orderItem.name,
+            price: Number(row.orderItem.price),
+            quantity: row.orderItem.quantity,
+            notes: row.orderItem.notes,
+            imageUrl: row.orderItem.imageUrl,
+          });
+        }
+        return acc;
+      }, {})
+    );
+
+    return NextResponse.json(formattedOrders);
   } catch (error) {
     return NextResponse.json({ error: "Failed to fetch orders" }, { status: 500 });
   }
@@ -67,7 +165,10 @@ export async function POST(request: NextRequest) {
     await db.insert(orderItems)
       .values(orderItemsToInsert);
 
-    return NextResponse.json(order);
+    return NextResponse.json({
+      ...order,
+      totalAmount: Number(order.totalAmount)
+    });
   } catch (error) {
     return NextResponse.json({ error: "Failed to create order" }, { status: 500 });
   }
@@ -94,7 +195,10 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    return NextResponse.json(updatedOrder[0]);
+    return NextResponse.json({
+      ...updatedOrder[0],
+      totalAmount: Number(updatedOrder[0].totalAmount)
+    });
   } catch (error) {
     return NextResponse.json({ error: "Failed to update order" }, { status: 500 });
   }
